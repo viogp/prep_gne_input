@@ -6,16 +6,22 @@ Program to prepare input files from hdf5 files
 import h5py
 import sys
 import numpy as np
+import re
 
 import src.utils as u
 
 verbose = True
+localtest = True
 
 GP20runs = True
 if GP20runs:
     # Path to files
-    root = '/home/violeta/buds/emlines/gp19_iz39_ivol'
-    subvols = list(range(1))
+    path = '/cosma5/data/durham/dc-gonz3/Galform_Out/v2.7.0/stable/MillGas/gp19/'
+    root = path+'/iz39/ivol'
+    subvols = list(range(64))
+    if localtest:
+        root = '/home/violeta/buds/emlines/gp20data/iz39/ivol'
+        subvols = list(range(2))
 
     # Cosmology and volume of the simulation
     h0     = 0.704
@@ -30,6 +36,13 @@ if GP20runs:
     mcold_z_disc = 'cold_metal'
     mcold_burst = 'mcold_burst'    
     mcold_z_burst = 'metals_burst'
+
+    # Get snapshop from path
+    match = re.search(r'iz(\d+)', root)
+    if match:
+        snap = int(match.group(1))
+    else:
+        print('WARNING: No snapnum found in root ',root)
     
     # Define the files and their corresponding properties
     selection = {
@@ -44,24 +57,19 @@ if GP20runs:
     file_props = {
         'galaxies.hdf5': {
             'group': 'Output001',
-            'datasets': ['mcold','mcold_burst','cold_metal','metals_burst'],
-            'units': ['Msun/h','Msun/h','Msun/h','Msun/h']
+            'datasets': ['redshift','index','type',
+                         'rbulge','rcomb','rdisk','mhot','vbulge',
+                         'mcold','mcold_burst','cold_metal','metals_burst',
+                         'mstars_bulge','mstars_burst','mstars_disk',
+                         'mstardot','mstardot_burst','mstardot_average',
+                         'M_SMBH','SMBH_Mdot_hh','SMBH_Mdot_stb','SMBH_Spin'],
+            'units': ['redshift','Host halo index','Gal. type (central=0)',
+                      'Mpc/h','Mpc/h','Mpc/h','Msun/h','km/s',
+                      'Msun/h','Msun/h','Msun/h','Msun/h',
+                      'Msun/h','Msun/h','Msun/h',
+                      'Msun/h/Gyr','Msun/h/Gyr','Msun/h/Gyr',
+                      'Msun/h','Msun/h/Gyr','Msun/h/Gyr','Spin']
         },
-        #'galaxies.hdf5': {
-        #    'group': 'Output001',
-        #    'datasets': ['redshift','index','type',
-        #                 'rbulge','rcomb','rdisk','mhot','vbulge',
-        #                 'mcold','mcold_burst','cold_metal','metals_burst',
-        #                 'mstars_bulge','mstars_burst','mstars_disk',
-        #                 'mstardot','mstardot_burst','mstardot_average',
-        #                 'M_SMBH','SMBH_Mdot_hh','SMBH_Mdot_stb','SMBH_Spin'],
-        #    'units': ['redshift','Host halo index','Gal. type (central=0)',
-        #              'Mpc/h','Mpc/h','Mpc/h','Msun/h','km/s',
-        #              'Msun/h','Msun/h','Msun/h','Msun/h',
-        #              'Msun/h','Msun/h','Msun/h',
-        #              'Msun/h/Gyr','Msun/h/Gyr','Msun/h/Gyr',
-        #              'Msun/h','Msun/h/Gyr','Msun/h/Gyr','Spin']
-        #},
         'agn.hdf5': {
             'group': 'Output001', 
             'datasets': ['Lbol_AGN'],
@@ -111,6 +119,7 @@ for ivol in subvols:
     head.attrs[u'lambda0'] = lambda0
     head.attrs[u'bside_Mpch'] = boxside
     head.attrs[u'mp_Msunh'] = mp
+    head.attrs[u'snap'] = snap
     data_group = hf.create_group('data')
     hf.close()
 
