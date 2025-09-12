@@ -10,18 +10,21 @@ import re
 
 import src.utils as u
 
+validate_files = False #Check the structure of files
+
 verbose = True
-localtest = True
+localtest = False
 
 GP20runs = True
 if GP20runs:
     # Path to files
     path = '/cosma5/data/durham/dc-gonz3/Galform_Out/v2.7.0/stable/MillGas/gp19/'
-    root = path+'/iz39/ivol'
-    subvols = list(range(64))
+    root = path+'iz39/ivol'
+    #subvols = list(range(64))
+    subvols = [18] #list(range(19,64)) ###here
     if localtest:
         root = '/home/violeta/buds/emlines/gp20data/iz39/ivol'
-        subvols = list(range(2))
+        subvols = list(range(1))
 
     # Cosmology and volume of the simulation
     h0     = 0.704
@@ -51,6 +54,7 @@ if GP20runs:
             'datasets': ['mhhalo','xgal','ygal','zgal'],
             'units' : ['Msun/h','Mpc/h','Mpc/h','Mpc/h'],
             'low_limits' : [20*mp,0.,0.,0.],
+            #'high_limits' : [None,25.,25.,25.]
             'high_limits' : [None,125.,125.,125.]
             }
         }
@@ -83,28 +87,31 @@ if GP20runs:
     }
 
 # Validate that all the files have the expected structure
-count_fails = 0
-for ivol in subvols:
-    path = root+str(subvols[ivol])+'/'
+if validate_files:
+    count_fails = 0
+    for ivol in subvols:
+        path = root+str(ivol)+'/'
 
-    if selection is None:
-        allfiles = file_props
-    else:
-        allfiles = {**selection, **file_props}
+        if selection is None:
+            allfiles = file_props
+        else:
+            allfiles = {**selection, **file_props}
 
-    for ifile, props in allfiles.items():
-        datasets = props['datasets']
-        group = props.get('group')
-        structure_ok = u.check_h5_structure(path+ifile,datasets,group=group)
-        if not structure_ok:
-            count_fails += 1
-if count_fails>0:
-    print(f"  STOP: Found {count_fails} problems.")
-    sys.exit(1)
+        for ifile, props in allfiles.items():
+            datasets = props['datasets']
+            group = props.get('group')
+            structure_ok = u.check_h5_structure(path+ifile,datasets,group=group)
+            if not structure_ok:
+                count_fails += 1
+    if count_fails>0:
+        print(f"  STOP: Found {count_fails} problems.")
+        sys.exit(1)
+    if verbose:
+        print(f'All {len(subvols)} hdf5 files have the expected structure.')
 
 # Loop over each subvolume
 for ivol in subvols:
-    path = root+str(subvols[ivol])+'/'
+    path = root+str(ivol)+'/'
 
     # Generate a header for the output file
     outfile = path+'gne_input.hdf5'
@@ -203,7 +210,20 @@ for ivol in subvols:
                     if nomask:
                         vals = hf[prop][:]                            
                     else:
-                        vals = hf[prop][mask]
+                        dataset_size = hf[prop].shape[0]
+                        max_mask_index = np.max(mask)
+                        if max_mask_index >= dataset_size:
+                            if verbose:
+                                print(f' * Dataset {prop} has {dataset_size} entries,',
+                                      f' but mask needs {max_mask_index + 1}')
+                                print(f'   Filling missing entries with NaN')
+                            # Create extended array with NaN for missing values
+                            extended_vals = np.full(len(mask), np.nan)
+                            valid_indices = mask < dataset_size
+                            extended_vals[valid_indices] = hf[prop][mask[valid_indices]]
+                            vals = extended_vals
+                        else:
+                            vals = hf[prop][mask]
                     if vals is None: continue
 
                     if calc_Zdisc and (prop==mcold_disc or prop==mcold_z_disc):
