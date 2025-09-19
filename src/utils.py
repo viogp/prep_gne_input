@@ -20,7 +20,7 @@ def combined_mask(alldata,low_lim,high_lim,verbose=True):
     mask : numpy array
        Indexes of those rows passing the combined conditions
     '''
-    # Chack that input shapes are consistent
+    # Check that input shapes are consistent
     nd = np.shape(alldata)[0]
     if (nd != len(low_lim) or nd != len(high_lim)):
         if verbose:
