@@ -35,8 +35,9 @@ def get_config(simtype, snap, localtest=False, verbose=False):
     config = config_function(simtype, snap,
                              localtest=localtest, verbose=verbose)
     return config
-    
-def get_GP20_config(simtype, snap, localtest=False, verbose=False):
+
+
+def get_GP20_config(simtype, snap, laptop=False, verbose=False):
     """
     Get configuration for GP20 runs
     
@@ -46,7 +47,7 @@ def get_GP20_config(simtype, snap, localtest=False, verbose=False):
         Simulation type (should be 'GP20')
     snap : integer
         Snapshot number
-    localtest : bool, optional
+    laptop : bool, optional
         If True, use local test configuration
     verbose : bool, optional
         If True, print further messages
@@ -59,7 +60,7 @@ def get_GP20_config(simtype, snap, localtest=False, verbose=False):
     # Path to files
     path = '/cosma5/data/durham/dc-gonz3/Galform_Out/v2.7.0/stable/MillGas/gp19/'
     root = path+'iz'+str(snap)+'/ivol'
-    if localtest:
+    if laptop:
         root = '/home/violeta/buds/emlines/gp20data/iz'+str(snap)+'/ivol'
 
     config = {

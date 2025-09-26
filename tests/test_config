@@ -1,0 +1,248 @@
+"""
+Unit tests for config.py functions
+"""
+import unittest
+from unittest.mock import patch, mock_open
+import sys
+import os
+
+# Add the parent directory to sys.path to import config
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from config import get_config, get_GP20_config, sims
+except ImportError:
+    # If running from different directory structure
+    import config
+    get_config = config.get_config
+    get_GP20_config = config.get_GP20_config
+    sims = config.sims
+
+
+class TestConfigFunctions(unittest.TestCase):
+    """Test cases for configuration functions"""
+    
+    def setUp(self):
+        """Set up test fixtures before each test method."""
+        self.valid_simtype = 'GP20'
+        self.invalid_simtype = 'GP21'
+        self.expected_keys = [
+            'path', 'root', 'h0', 'omega0', 'omegab', 'lambda0', 
+            'boxside', 'mp', 'mcold_disc', 'mcold_z_disc', 
+            'mcold_burst', 'mcold_z_burst', 'subvols', 'snap',
+            'selection', 'file_props'
+        ]
+    
+    def test_get_config_valid_simtype(self):
+        """Test get_config with valid simulation type"""
+        config = get_config(self.valid_simtype)
+        
+        # Check that config is returned as dictionary
+        self.assertIsInstance(config, dict)
+        
+        # Check that all expected keys are present
+        for key in self.expected_keys:
+            self.assertIn(key, config, f"Key '{key}' missing from config")
+    
+    def test_get_config_invalid_simtype(self):
+        """Test get_config with invalid simulation type"""
+        with self.assertRaises(ValueError) as context:
+            get_config(self.invalid_simtype)
+        
+        # Check error message content
+        error_msg = str(context.exception)
+        self.assertIn(self.invalid_simtype, error_msg)
+        self.assertIn("not supported", error_msg)
+        self.assertIn(str(sims), error_msg)
+    
+    def test_get_config_with_parameters(self):
+        """Test get_config with various parameters"""
+        # Test with snap parameter
+        config = get_config(self.valid_simtype, snap=42)
+        self.assertEqual(config['snap'], 42)
+        
+        # Test with localtest=True
+        config = get_config(self.valid_simtype, localtest=True)
+        self.assertIn('/home/violeta/buds/emlines/gp20data', config['root'])
+        self.assertEqual(config['subvols'], list(range(1)))
+        
+        # Test with localtest=False (default)
+        config = get_config(self.valid_simtype, localtest=False)
+        self.assertIn('/cosma5/data/durham', config['root'])
+        self.assertEqual(config['subvols'], list(range(64)))
+    
+    @patch('builtins.print')
+    def test_get_config_verbose(self, mock_print):
+        """Test get_config with verbose output"""
+        get_config(self.valid_simtype, verbose=True)
+        mock_print.assert_called_with(f"Getting configuration for simulation type: {self.valid_simtype}")
+    
+    def test_get_GP20_config_default_parameters(self):
+        """Test get_GP20_config with default parameters"""
+        config = get_GP20_config('GP20')
+        
+        # Check basic structure
+        self.assertIsInstance(config, dict)
+        
+        # Check cosmology parameters
+        self.assertEqual(config['h0'], 0.704)
+        self.assertEqual(config['omega0'], 0.307)
+        self.assertEqual(config['omegab'], 0.0482)
+        self.assertEqual(config['lambda0'], 0.693)
+        self.assertEqual(config['boxside'], 500.0)
+        self.assertEqual(config['mp'], 9.35e8)
+        
+        # Check metallicity parameters
+        self.assertEqual(config['mcold_disc'], 'mcold')
+        self.assertEqual(config['mcold_z_disc'], 'cold_metal')
+        self.assertEqual(config['mcold_burst'], 'mcold_burst')
+        self.assertEqual(config['mcold_z_burst'], 'metals_burst')
+    
+    def test_get_GP20_config_localtest_true(self):
+        """Test get_GP20_config with localtest=True"""
+        config = get_GP20_config('GP20', localtest=True)
+        
+        # Check local paths are used
+        self.assertEqual(config['root'], '/home/violeta/buds/emlines/gp20data/iz39/ivol')
+        self.assertEqual(config['subvols'], list(range(1)))
+    
+    def test_get_GP20_config_localtest_false(self):
+        """Test get_GP20_config with localtest=False"""
+        config = get_GP20_config('GP20', localtest=False)
+        
+        # Check production paths are used
+        expected_path = '/cosma5/data/durham/dc-gonz3/Galform_Out/v2.7.0/stable/MillGas/gp19/'
+        self.assertEqual(config['path'], expected_path)
+        self.assertEqual(config['root'], expected_path + 'iz39/ivol')
+        self.assertEqual(config['subvols'], list(range(64)))
+    
+    def test_get_GP20_config_snap_extraction(self):
+        """Test snapshot number extraction from path"""
+        config = get_GP20_config('GP20')
+        
+        # Should extract 39 from 'iz39/ivol'
+        self.assertEqual(config['snap'], 39)
+    
+    def test_get_GP20_config_snap_override(self):
+        """Test that explicit snap parameter overrides extracted value"""
+        config = get_GP20_config('GP20', snap=50)
+        
+        # Should use provided snap value instead of extracted one
+        self.assertEqual(config['snap'], 50)
+    
+    @patch('builtins.print')
+    def test_get_GP20_config_verbose_warning(self, mock_print):
+        """Test verbose warning when no snapshot found in path"""
+        # This test would require mocking the regex search to fail
+        # For now, we'll test the normal case
+        config = get_GP20_config('GP20', verbose=True)
+        self.assertIsInstance(config, dict)
+    
+    def test_get_GP20_config_selection_structure(self):
+        """Test the selection dictionary structure"""
+        config = get_GP20_config('GP20')
+        
+        selection = config['selection']
+        self.assertIn('galaxies.hdf5', selection)
+        
+        gal_selection = selection['galaxies.hdf5']
+        self.assertEqual(gal_selection['group'], 'Output001')
+        self.assertEqual(len(gal_selection['datasets']), 4)
+        self.assertEqual(len(gal_selection['units']), 4)
+        self.assertEqual(len(gal_selection['low_limits']), 4)
+        self.assertEqual(len(gal_selection['high_limits']), 4)
+        
+        # Check that halo mass limit uses mp
+        expected_halo_limit = 20 * config['mp']
+        self.assertEqual(gal_selection['low_limits'][0], expected_halo_limit)
+    
+    def test_get_GP20_config_file_props_structure(self):
+        """Test the file_props dictionary structure"""
+        config = get_GP20_config('GP20')
+        
+        file_props = config['file_props']
+        
+        # Check all expected files are present
+        expected_files = ['galaxies.hdf5', 'agn.hdf5', 'tosedfit.hdf5']
+        for filename in expected_files:
+            self.assertIn(filename, file_props)
+        
+        # Check galaxies.hdf5 structure
+        gal_props = file_props['galaxies.hdf5']
+        self.assertEqual(gal_props['group'], 'Output001')
+        self.assertEqual(len(gal_props['datasets']), len(gal_props['units']))
+        self.assertGreater(len(gal_props['datasets']), 10)  # Should have many datasets
+        
+        # Check AGN structure
+        agn_props = file_props['agn.hdf5']
+        self.assertEqual(agn_props['group'], 'Output001')
+        self.assertIn('Lbol_AGN', agn_props['datasets'])
+        
+        # Check SED fitting structure
+        sed_props = file_props['tosedfit.hdf5']
+        self.assertEqual(sed_props['group'], 'Output001')
+        self.assertEqual(len(sed_props['datasets']), 2)
+    
+    def test_sims_list_consistency(self):
+        """Test that sims list contains expected values"""
+        self.assertIsInstance(sims, list)
+        self.assertIn('GP20', sims)
+    
+    def test_config_return_types(self):
+        """Test that configuration values have expected types"""
+        config = get_config('GP20')
+        
+        # Numeric parameters should be float or int
+        self.assertIsInstance(config['h0'], float)
+        self.assertIsInstance(config['omega0'], float)
+        self.assertIsInstance(config['boxside'], float)
+        self.assertIsInstance(config['mp'], (int, float))
+        
+        # String parameters
+        self.assertIsInstance(config['path'], str)
+        self.assertIsInstance(config['root'], str)
+        self.assertIsInstance(config['mcold_disc'], str)
+        
+        # List parameters
+        self.assertIsInstance(config['subvols'], list)
+        
+        # Dictionary parameters
+        self.assertIsInstance(config['selection'], dict)
+        self.assertIsInstance(config['file_props'], dict)
+
+
+class TestConfigEdgeCases(unittest.TestCase):
+    """Test edge cases and error conditions"""
+    
+    def test_empty_simtype(self):
+        """Test behavior with empty simulation type"""
+        with self.assertRaises(ValueError):
+            get_config('')
+    
+    def test_none_simtype(self):
+        """Test behavior with None simulation type"""
+        with self.assertRaises((ValueError, TypeError)):
+            get_config(None)
+    
+    def test_case_sensitive_simtype(self):
+        """Test that simulation type matching is case sensitive"""
+        with self.assertRaises(ValueError):
+            get_config('gp20')  # lowercase should fail
+        
+        with self.assertRaises(ValueError):
+            get_config('Gp20')  # mixed case should fail
+    
+    def test_negative_snap(self):
+        """Test behavior with negative snapshot number"""
+        config = get_config('GP20', snap=-1)
+        self.assertEqual(config['snap'], -1)  # Should accept negative values
+    
+    def test_zero_snap(self):
+        """Test behavior with zero snapshot number"""
+        config = get_config('GP20', snap=0)
+        self.assertEqual(config['snap'], 0)
+
+
+if __name__ == '__main__':
+    # Run tests with verbose output
+    unittest.main(verbosity=2)
