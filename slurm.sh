@@ -10,7 +10,7 @@
 #SBATCH -o standard_output_file.%J.out
 #SBATCH -e standard_error_file.%J.err
 #SBATCH -p cosma5 # Partition/queue, e.g. cosma, cosma8, etc.
-#SBATCH -A dp004 # Project
+#SBATCH -A durham # Project, e.g. dp004
 #SBATCH -t 72:00:00
 #SBATCH --mail-type=END # notifications for job done &fail
 #SBATCH --mail-user=violetagp@protonmail.com

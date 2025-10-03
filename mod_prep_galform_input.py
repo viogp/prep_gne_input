@@ -3,7 +3,7 @@ Program to prepare input files for generate_nebular_emission from hdf5 files
 """
 
 from src.config import get_config
-from src.validate import validate_hdf5_files
+from src.validate import validate_hdf5_file
 #from src.generate_input import generate_input_file
 
 verbose = True
@@ -25,13 +25,20 @@ config = get_config(simtype,snap,laptop=laptop)
 
 # Validate that files have the expected structure
 if validate_files:
-    valid = validate_hdf5_files(config, subvols, verbose=verbose)
+    count_failures = 0
+    for ivol in subvols:
+        success = validate_hdf5_file(config, ivol, verbose=verbose)
+        if not success: count_failures += 1
+    if count_failures<1: print(f'SUCCESS: All {len(subvols)} subvolumes have valid HDF5 files.')
+        
+# Generate input data for generate_nebular_emission
+if generate_files:
+    count_failures = 0
+    for ivol in subvols:
+        success = generate_input_file(config, ivol, verbose=verbose)
+        if not success: count_failures += 1
+    if count_failures<1: print(f'SUCCESS: All {len(subvols)} HDF5 files have been generated.')
 
-## Generate input data for generate_nebular_emission
-#if generate_files:
-#    for ivol in subvols:
-#        success = generate_input_file(config, ivol, verbose=verbose)
-#
 ## Random subsampling of the input files
 #subsampling = 0.1 # Percentage
 #min_subvols = 2
