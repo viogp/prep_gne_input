@@ -3,7 +3,7 @@ Configuration of files to be read
 """
 sims = ['GP20']
 
-def get_config(simtype, snap, localtest=False, verbose=False):
+def get_config(simtype, snap, laptop=False, verbose=False):
     """
     Get general configuration
     
@@ -13,7 +13,7 @@ def get_config(simtype, snap, localtest=False, verbose=False):
         Simulation type (must be in sims list)
     snap : integer
         Snapshot number
-    localtest : bool
+    laptop : bool
         If True, use local test configuration
     verbose : bool
         If True, print further messages
@@ -33,7 +33,7 @@ def get_config(simtype, snap, localtest=False, verbose=False):
     function_name = f'get_{simtype}_config'
     config_function = globals()[function_name]
     config = config_function(simtype, snap,
-                             localtest=localtest, verbose=verbose)
+                             laptop=laptop, verbose=verbose)
     return config
 
 
