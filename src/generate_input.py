@@ -1,10 +1,9 @@
 """
 Program to generate input files for gnerate_nebular_emission
 """
+import os
 import h5py
-#import sys
 import numpy as np
-#import re
 
 import src.utils as u
 
@@ -28,12 +27,17 @@ def generate_input_file(config, ivol, verbose=True):
     """
     root = config['root']
     path = root + str(ivol) + '/'
+    if (not os.path.exists(path)):
+        print(f' No adecuate path: {path}')
+        return False
 
     # Generate a header for the output file
     outfile = path+'gne_input.hdf5'
-    print(f' * Generating file: {outfile}')
-
-    hf = h5py.File(outfile, 'w')
+    try:
+        hf = h5py.File(outfile, 'w')
+    except:
+        print(f' Not able to generate file: {outfile}')
+        return False
     headnom = 'header'
     head = hf.create_dataset(headnom,())
     head.attrs[u'h0'] = config['h0']
@@ -45,7 +49,8 @@ def generate_input_file(config, ivol, verbose=True):
     head.attrs[u'snap'] = config['snap']
     data_group = hf.create_group('data')
     hf.close()
-
+    print(f' * Generating file: {outfile}')
+    
     # Make the selection, if relevant
     nomask = False; mask = None
     selection = config['selection']
@@ -164,3 +169,5 @@ def generate_input_file(config, ivol, verbose=True):
             with h5py.File(outfile, 'a') as outf:
                 dd = outf['data'].create_dataset('Zgas_bst', data=Zbst)
                 dd.attrs['units'] = 'M_Z/M'
+
+    return True
