@@ -3,7 +3,6 @@
 
 Program to prepare input files from hdf5 files
 """
-<<<<<<< HEAD
 import h5py
 import sys
 import numpy as np
@@ -12,16 +11,6 @@ import re
 import src.utils as u
 
 validate_files = False #Check the structure of files
-=======
-from src.config import get_config
-from src.validate import validate_hdf5_files
-from src.generate_input import generate_input_file
->>>>>>> ceb17ba (Problems merging data have resulted in loosing work. The validation and generation of the full input seems to be working again, however, no through tests have been done.)
-
-verbose = True
-localtest = False
-
-<<<<<<< HEAD
 GP20runs = True
 if GP20runs:
     # Path to files
@@ -96,7 +85,7 @@ git             'group': 'Output001',
 # Validate that all the files have the expected structure
 if validate_files:
     count_fails = 0
-=======
+
 validate_files = False  #Check the structure of files
 generate_files = True #Generate input for generate_nebular_emission
 generate_testing_files = False #Generate reduced input for testing
@@ -118,20 +107,14 @@ if validate_files:
 
 # Generate input data for generate_nebular_emission
 if generate_files:
->>>>>>> ceb17ba (Problems merging data have resulted in loosing work. The validation and generation of the full input seems to be working again, however, no through tests have been done.)
-    for ivol in subvols:
-        path = root+str(ivol)+'/'
-
-<<<<<<< HEAD
         if selection is None:
             allfiles = file_props
         else:
             allfiles = {**selection, **file_props}
-=======
+
 # Random subsampling of the input files
 subsampling = 0.1 # Percentage
 min_subvols = 2
->>>>>>> ceb17ba (Problems merging data have resulted in loosing work. The validation and generation of the full input seems to be working again, however, no through tests have been done.)
 
         for ifile, props in allfiles.items():
             datasets = props['datasets']

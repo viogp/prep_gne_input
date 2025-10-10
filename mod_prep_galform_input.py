@@ -4,12 +4,12 @@ Program to prepare input files for generate_nebular_emission from hdf5 files
 
 from src.config import get_config
 from src.validate import validate_hdf5_file
-#from src.generate_input import generate_input_file
+from src.generate_input import generate_input_file
 
 verbose = True
 
-validate_files = True  # Check the structure of files
-generate_files = False # Generate input for generate_nebular_emission
+validate_files = False  # Check the structure of files
+generate_files = True # Generate input for generate_nebular_emission
 generate_testing_files = False # Generate reduced input for testing
 
 simtype = 'GP20' # Set the file configuration adequately 
