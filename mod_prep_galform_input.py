@@ -21,7 +21,7 @@ laptop   = True     # Tests within laptop (different paths)
 if laptop:
     subvols = list(range(2))
 
-percentage = 0.1 # Percentage for generating testing file
+percentage = 1 # Percentage for generating testing file
 subfiles = 2     # Number of testing files
     
 # Get the configuration
@@ -33,7 +33,7 @@ if validate_files:
     for ivol in subvols:
         success = validate_hdf5_file(config, ivol, verbose=verbose)
         if not success: count_failures += 1
-    if count_failures<1: print(f'SUCCESS: All {len(subvols)} subvolumes have valid HDF5 files.')
+    if count_failures<1: print(f'SUCCESS: All {len(subvols)} subvolumes have valid hdf5 files.')
         
 # Generate input data for generate_nebular_emission
 if generate_files:
@@ -41,10 +41,11 @@ if generate_files:
     for ivol in subvols:
         success = generate_input_file(config, ivol, verbose=verbose)
         if not success: count_failures += 1
-    if count_failures<1: print(f'SUCCESS: All {len(subvols)} HDF5 files have been generated.')
+    if count_failures<1: print(f'SUCCESS: All {len(subvols)} hdf5 files have been generated.')
 
 # Random subsampling of the input files
 if generate_testing_files:
-    success = generate_test_files(config, subvols, verbose=verbose)
-    if count_failures<1: print(f'SUCCESS: All {len(subvols)} HDF5 files have been generated.')
+    success = generate_test_files(config, subvols, percentage,
+                                  subfiles, verbose=verbose)
+    if success: print(f'SUCCESS: All {subfiles*2} test files have been generated.')
 
