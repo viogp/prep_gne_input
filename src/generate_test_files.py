@@ -47,10 +47,10 @@ def generate_test_files(config, subvols, p, nf, outpath='output', verbose=True):
         outfs_h5 = []; outfs_t = []
 
         # Generate header for text files
-        head = '# '
-        for key in ff['data'].keys():
-            head += key+' '
-        
+        head = '#'
+        for ii, key in enumerate(ff['data'].keys()):
+            head += ' ('+str(ii)+')'+key
+
         # Generate output files
         for ii in range(nf):
             outpath2 = outpath1+str(ii)+'/'
