@@ -46,7 +46,7 @@ def generate_input_file(config, ivol, verbose=True):
     head.attrs[u'lambda0'] = config['lambda0']
     head.attrs[u'bside_Mpch'] = config['boxside']
     head.attrs[u'mp_Msunh'] = config['mp']
-    head.attrs[u'snap'] = config['snap']
+    head.attrs[u'snapnum'] = config['snap']
     data_group = hf.create_group('data')
     hf.close()
     print(f' * Generating file: {outfile}')
@@ -154,7 +154,8 @@ def generate_input_file(config, ivol, verbose=True):
                             Zbst[vals>0.] /= vals[vals>0.]
                         else:
                             Zbst *= vals
-                    else:
+
+                    if(prop!=mcold_z_disc and prop!=mcold_z_burst):
                         with h5py.File(outfile, 'a') as outf:
                             dd = outf['data'].create_dataset(prop, data=vals)
                             dd.attrs['units'] = props['units'][ii]
