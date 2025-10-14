@@ -21,7 +21,7 @@ laptop   = True     # Tests within laptop (different paths)
 if laptop:
     subvols = list(range(2))
 
-percentage = 1 # Percentage for generating testing file
+percentage = 10 # Percentage for generating testing file
 subfiles = 2     # Number of testing files
     
 # Get the configuration
