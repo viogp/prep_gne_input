@@ -63,6 +63,8 @@ def get_GP20_config(simtype, snap, laptop=False, verbose=False):
     if laptop:
         root = '/home/violeta/buds/emlines/gp20data/iz'+str(snap)+'/ivol'
 
+    boxside = 125 #Mpc/h (whole volume 500Mpc/h)
+    
     config = {
         # Paths
         'root': root,
@@ -72,7 +74,7 @@ def get_GP20_config(simtype, snap, laptop=False, verbose=False):
         'omega0': 0.307,
         'omegab': 0.0482,
         'lambda0': 0.693,
-        'boxside': 500.0,  # Mpc/h
+        'boxside': boxside,
         'mp': 9.35e8,  # Msun/h
 
         # Metallicity calculation parameters
@@ -90,7 +92,7 @@ def get_GP20_config(simtype, snap, laptop=False, verbose=False):
             'datasets': ['mhhalo', 'xgal', 'ygal', 'zgal'],
             'units': ['Msun/h', 'Mpc/h', 'Mpc/h', 'Mpc/h'],
             'low_limits': [20 * config['mp'], 0., 0., 0.],
-            'high_limits': [None, 125., 125., 125.]
+            'high_limits': [None, boxside, boxside, boxside]
         }
     }
     
@@ -99,12 +101,14 @@ def get_GP20_config(simtype, snap, laptop=False, verbose=False):
         'galaxies.hdf5': {
             'group': 'Output001',
             'datasets': ['redshift', 'index', 'type',
+                         'vxgal', 'vygal', 'vzgal',
                          'rbulge', 'rcomb', 'rdisk', 'mhot', 'vbulge',
                          'mcold', 'mcold_burst', 'cold_metal', 'metals_burst',
                          'mstars_bulge', 'mstars_burst', 'mstars_disk',
                          'mstardot', 'mstardot_burst', 'mstardot_average',
                          'M_SMBH', 'SMBH_Mdot_hh', 'SMBH_Mdot_stb', 'SMBH_Spin'],
             'units': ['redshift', 'Host halo index', 'Gal. type (central=0)',
+                      'km/s','km/s','km/s',
                       'Mpc/h', 'Mpc/h', 'Mpc/h', 'Msun/h', 'km/s',
                       'Msun/h', 'Msun/h', 'Msun/h', 'Msun/h',
                       'Msun/h', 'Msun/h', 'Msun/h',
