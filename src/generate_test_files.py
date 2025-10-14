@@ -42,7 +42,7 @@ def generate_test_files(config, subvols, p, nf, outpath='output', verbose=True):
     # Generate output files with a header and data structure
     infile = root + str(subvols[0]) +'/gne_input.hdf5'
     with h5py.File(infile, 'r') as ff:
-        iz = ff['header'].attrs['snap']
+        iz = ff['header'].attrs['snapnum']
         outpath1 = outpath+'/iz'+str(iz)+'/ivol'
         outfs_h5 = []; outfs_t = []
 
@@ -63,6 +63,7 @@ def generate_test_files(config, subvols, p, nf, outpath='output', verbose=True):
             with h5py.File(outfile, 'w') as outf:
                 # Copy header
                 ff.copy('header', outf)
+                outf['header'].attrs['percentage'] = p
 
                 # Copy data structure (assuming no subgroups)
                 dg = outf.create_group('data')
