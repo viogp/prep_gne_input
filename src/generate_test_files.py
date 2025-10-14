@@ -68,9 +68,13 @@ def generate_test_files(config, subvols, p, nf, outpath='output', verbose=True):
                 dg = outf.create_group('data')
                 for key in ff['data'].keys():
                     dtype = ff['data/'+key].dtype
-                    key = dg.create_dataset(key,shape=(0,),dtype=dtype,
+                    dset = dg.create_dataset(key,shape=(0,),dtype=dtype,
                                             maxshape=(None,))
 
+                    # Copy attributes from source dataset
+                    for attr_name, attr_value in ff['data'][key].attrs.items():
+                        dset.attrs[attr_name] = attr_value
+                    
             # Text files
             outfile = outpath2+'ex.txt'
             outfs_t.append(outfile)
