@@ -25,14 +25,25 @@ def generate_input_file(config, ivol, verbose=True):
     bool
         True if the file has been successfully generated, False otherwise
     """
+    ending = str(ivol) + '/'
+    
     root = config['root']
-    path = root + str(ivol) + '/'
+    path = root + ending
     if (not os.path.exists(path)):
         print(f' No adecuate path: {path}')
         return False
 
     # Generate a header for the output file
-    outfile = path+'gne_input.hdf5'
+    outroot = config['outroot']
+    outpath = outroot+ending
+    if (not os.path.exists(outpath)):
+        try:
+            os.makedirs(outpath)
+        except:
+            print('WARNING: problem creating directory ',outpath)
+            return False
+
+    outfile = outpath+'gne_input.hdf5'
     try:
         hf = h5py.File(outfile, 'w')
     except:

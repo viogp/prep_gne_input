@@ -7,7 +7,7 @@ import numpy as np
 
 #import src.utils as u
 
-def generate_test_files(config, subvols, p, nf, outpath='output', verbose=True):
+def generate_test_files(config, subvols, p, nf, outpath=None, verbose=True):
     """
     Generate test input file for generate_nebular_emission
     both as hdf5 files and txt
@@ -32,13 +32,15 @@ def generate_test_files(config, subvols, p, nf, outpath='output', verbose=True):
     bool
         True if the files have been successfully generated, False otherwise
     """
-    root = config['root']
+    root = config['outroot']
     ifile = 0
 
     # Generate output folder if needed
+    if outpath is None:
+        outpath = 'output'
     if not os.path.exists(outpath):
         os.makedirs(outpath)
-    
+
     # Generate output files with a header and data structure
     infile = root + str(subvols[0]) +'/gne_input.hdf5'
     with h5py.File(infile, 'r') as ff:

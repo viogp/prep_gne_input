@@ -57,7 +57,9 @@ def get_GP20_config(snap, laptop=False, verbose=False):
     """
     # Path to files
     path = '/cosma5/data/durham/dc-gonz3/Galform_Out/v2.7.0/stable/MillGas/gp19/'
-    root = path+'iz'+str(snap)+'/ivol'
+    ending = 'iz'+str(snap)+'/ivol'
+    outroot = path+ending
+    root = outroot
     if laptop:
         root = '/home/violeta/buds/emlines/gp20data/iz'+str(snap)+'/ivol'
 
@@ -66,6 +68,7 @@ def get_GP20_config(snap, laptop=False, verbose=False):
     config = {
         # Paths
         'root': root,
+        'outroot': outroot,
         
         # Cosmology parameters
         'h0': 0.704,
@@ -148,15 +151,18 @@ def get_GP20UNIT1Gpc_config(snap, laptop=False, verbose=False):
     """
     # Path to files
     path = '/data2/users/olivia/galform_output/UNIT_PNG/UNIT_1GPC/'
-    root = path+'iz'+str(snap)+'/ivol'
+    ending = 'iz'+str(snap)+'/ivol'
+    outroot = '/home2/vgonzalez/Data/Galform/UNIT1GPC_fnl0/'+ending
+    root = path+ending
     if laptop:
-        root = '/home/violeta/buds/emlines/gp20data/iz'+str(snap)+'/ivol'
-
+        root = '/home/violeta/buds/emlines/gp20data/iz'+str(snap)+'/ivol'  
+        
     boxside = 30 #Mpc/h (whole volume 1000Mpc/h)
     
     config = {
         # Paths
         'root': root,
+        'outroot': outroot,
         
         # Cosmology parameters
         'h0': 0.6773999929428101,
