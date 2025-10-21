@@ -6,6 +6,7 @@ import h5py
 import numpy as np
 
 import src.utils as u
+import src.cosmology as cosmo
 
 def generate_input_file(config, ivol, verbose=True):
     """
@@ -26,7 +27,6 @@ def generate_input_file(config, ivol, verbose=True):
         True if the file has been successfully generated, False otherwise
     """
     ending = str(ivol) + '/'
-    
     root = config['root']
     path = root + ending
     if (not os.path.exists(path)):
@@ -117,12 +117,13 @@ def generate_input_file(config, ivol, verbose=True):
     # Loop over files with information
     count_props = -1
     file_props = config['file_props']
+    redshift = None
     for ifile, props  in file_props.items():
         filename = path+ifile
         group = props['group']
         datasets = props['datasets']
     
-        # Check that metallicities need to be calculated
+        # Check if metallicities need to be calculated
         calc_Zdisc = set([mcold_disc,mcold_z_disc]).issubset(datasets)
         if calc_Zdisc:
             Zdisc = np.ones(len(mask), dtype=float)
@@ -130,6 +131,30 @@ def generate_input_file(config, ivol, verbose=True):
         calc_Zbst  = set([mcold_burst,mcold_z_burst]).issubset(datasets)
         if calc_Zbst:
             Zbst = np.ones(len(mask), dtype=float)
+
+        # Check if magnitudes are included
+        calc_mag = any('mag' in s for s in datasets)
+        if calc_mag:
+            cosmo.set_cosmology(omega0=config['omega0'],
+                                omegab=config['omegab'],
+                                lambda0=config['lambda0'],
+                                h0=config['h0'],
+                                universe="Flat",include_radiation=False)
+            
+            if redshift is None:
+                # Find file with redshift 
+                for check_file, check_props in file_props.items():
+                    if 'redshift' in check_props['datasets']:
+                        zfilename = path + check_file
+                        with h5py.File(zfilename, 'r') as hdf_zfile:
+                            if group is None:
+                                zhf = hdf_zfile
+                            elif group in hdf_zfile:
+                                zhf = hdf_zfile[group]
+                            # Read redshift
+                            redshift = zhf['redshift'][()]
+                            break
+            tomag = cosmo.band_corrected_distance_modulus(redshift)
 
         # Read data in each file    
         with h5py.File(filename, 'r') as hdf_file:

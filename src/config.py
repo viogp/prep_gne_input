@@ -32,8 +32,7 @@ def get_config(simtype, snap, laptop=False, verbose=False):
 
     function_name = f'get_{simtype}_config'
     config_function = globals()[function_name]
-    config = config_function(snap,
-                             laptop=laptop, verbose=verbose)
+    config = config_function(snap,laptop=laptop, verbose=verbose)
     return config
 
 
@@ -59,10 +58,10 @@ def get_GP20_config(snap, laptop=False, verbose=False):
     path = '/cosma5/data/durham/dc-gonz3/Galform_Out/v2.7.0/stable/MillGas/gp19/'
     ending = 'iz'+str(snap)+'/ivol'
     outroot = path+ending
-    root = outroot
     if laptop:
-        root = '/home/violeta/buds/emlines/gp20data/iz'+str(snap)+'/ivol'
-
+        outroot = '/home/violeta/buds/emlines/gp20data/iz'+str(snap)+'/ivol'
+    root = outroot
+        
     boxside = 125 #Mpc/h (whole volume 500Mpc/h)
     
     config = {
