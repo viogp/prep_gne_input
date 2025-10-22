@@ -117,7 +117,7 @@ def generate_input_file(config, ivol, verbose=True):
     # Loop over files with information
     count_props = -1
     file_props = config['file_props']
-    redshift = None
+    redshift = None; tomag = None
     for ifile, props  in file_props.items():
         filename = path+ifile
         group = props['group']
@@ -134,13 +134,13 @@ def generate_input_file(config, ivol, verbose=True):
 
         # Check if magnitudes are included
         calc_mag = any('mag' in s for s in datasets)
-        if calc_mag:
+        if calc_mag and tomag is None:
             cosmo.set_cosmology(omega0=config['omega0'],
                                 omegab=config['omegab'],
                                 lambda0=config['lambda0'],
                                 h0=config['h0'],
                                 universe="Flat",include_radiation=False)
-            
+
             if redshift is None:
                 # Find file with redshift 
                 for check_file, check_props in file_props.items():
@@ -155,7 +155,10 @@ def generate_input_file(config, ivol, verbose=True):
                             redshift = zhf['redshift'][()]
                             break
             tomag = cosmo.band_corrected_distance_modulus(redshift)
-
+            DL = cosmo.luminosity_distance(redshift)
+            with h5py.File(outfile, 'a') as outf:
+                outf['header'].attrs['luminosity_distance_Mpch'] = DL
+            
         # Read data in each file    
         with h5py.File(filename, 'r') as hdf_file:
             if group is None:
@@ -193,6 +196,10 @@ def generate_input_file(config, ivol, verbose=True):
 
                     if(prop!=mcold_z_disc and prop!=mcold_z_burst):
                         with h5py.File(outfile, 'a') as outf:
+                            if 'mag' in prop:
+                                vals += tomag
+                                if verbose:
+                                    print(f'- Converting {prop} into an apparent mag')
                             dd = outf['data'].create_dataset(prop, data=vals)
                             dd.attrs['units'] = props['units'][ii]
 
