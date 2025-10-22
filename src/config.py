@@ -123,7 +123,7 @@ def get_GP20_config(snap, laptop=False, verbose=False):
         'tosedfit.hdf5': {
             'group': 'Output001',
             'datasets': ['mag_UKIRT-K_o_tot_ext', 'mag_SDSSz0.1-r_o_tot_ext'],
-            'units': ['AB', 'AB']
+            'units': ['AB apparent', 'AB apparent']
         }
     }
     
@@ -219,7 +219,7 @@ def get_GP20UNIT1Gpc_config(snap, laptop=False, verbose=False):
             'group': 'Output001',
             #'datasets': ['mag_UKIRT-K_o_tot_ext', 'mag_SDSSz0.1-r_o_tot_ext'],
             'datasets': ['mag_WISE-3.6_o_tot_ext', 'mag_SDSS-r_o_tot_ext'],
-            'units': ['AB', 'AB']
+            'units': ['AB apparent', 'AB apparent']
         }
     }
     
