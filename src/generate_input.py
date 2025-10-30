@@ -140,7 +140,6 @@ def generate_input_file(config, ivol, verbose=True):
                                 lambda0=config['lambda0'],
                                 h0=config['h0'],
                                 universe="Flat",include_radiation=False)
-
             if redshift is None:
                 # Find file with redshift 
                 for check_file, check_props in file_props.items():
@@ -154,6 +153,7 @@ def generate_input_file(config, ivol, verbose=True):
                             # Read redshift
                             redshift = zhf['redshift'][()]
                             break
+            redshift = max(redshift, 0.1) # To avoid no correction
             tomag = cosmo.band_corrected_distance_modulus(redshift)
             DL = cosmo.luminosity_distance(redshift)
             with h5py.File(outfile, 'a') as outf:
