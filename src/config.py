@@ -122,8 +122,14 @@ def get_GP20_config(snap, laptop=False, verbose=False):
         },
         'tosedfit.hdf5': {
             'group': 'Output001',
-            'datasets': ['mag_UKIRT-K_o_tot_ext', 'mag_SDSSz0.1-r_o_tot_ext'],
-            'units': ['AB apparent', 'AB apparent']
+            'datasets': ['mag_UKIRT-K_o_tot_ext', 'mag_SDSSz0.1-r_o_tot_ext',
+                         'L_tot_Halpha','L_tot_Halpha_ext',
+                         'L_tot_Hbeta','L_tot_Hbeta_ext',
+                         'L_tot_NII6583','L_tot_NII6583_ext',
+                         'L_tot_OII3727','L_tot_OII3727_ext',
+                         'L_tot_OIII5007','L_tot_OIII5007_ext',
+                         'L_tot_SII6716','L_tot_SII6716_ext'],
+            'units': ['AB apparent'] * 2 + ['h^2 erg/s'] * 12
         }
     }
     
