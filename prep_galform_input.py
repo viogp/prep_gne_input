@@ -10,8 +10,8 @@ from src.generate_test_files import generate_test_files
 verbose = True
 
 validate_files = False  # Check the structure of files
-generate_files = False # Generate input for generate_nebular_emission
-generate_testing_files = True # Generate reduced input for testing
+generate_files = True # Generate input for generate_nebular_emission
+generate_testing_files = False # Generate reduced input for testing
 
 #-------------------------------------------------------------
 #simtype = 'GP20UNIT1Gpc' # Set the file configuration adequately 
@@ -19,11 +19,11 @@ generate_testing_files = True # Generate reduced input for testing
 #subvols = list(range(1))
 #-------------------------------------------------------------
 simtype = 'GP20' # Set the file configuration adequately 
-snap = 61
+snap = 39 #61
 subvols = list(range(64))
 #-------------------------------------------------------------
 
-laptop = False  # Tests within laptop (different paths)
+laptop = True  # Tests within laptop (different paths)
 if laptop:
     subvols = list(range(2))
 

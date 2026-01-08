@@ -95,7 +95,18 @@ def get_GP20_config(snap, laptop=False, verbose=False):
             'high_limits': [None, boxside, boxside, boxside]
         }
     }
-    
+
+
+    # Define the lines and luminosity names
+    config['lines'] = ['Halpha', 'Hbeta', 'NII6583', 'OII3727', 'OIII5007', 'SII6716']
+    config['line_prefix'] = 'L_tot_'
+    config['line_suffix_ext'] = '_ext'
+
+    line_datasets = []
+    for line in config['lines']:
+        line_datasets.append(f"{config['line_prefix']}{line}")
+        line_datasets.append(f"{config['line_prefix']}{line}{config['line_suffix_ext']}")
+
     # File properties to extract
     config['file_props'] = {
         'galaxies.hdf5': {
@@ -122,17 +133,10 @@ def get_GP20_config(snap, laptop=False, verbose=False):
         },
         'tosedfit.hdf5': {
             'group': 'Output001',
-            'datasets': ['mag_UKIRT-K_o_tot_ext', 'mag_SDSSz0.1-r_o_tot_ext',
-                         'L_tot_Halpha','L_tot_Halpha_ext',
-                         'L_tot_Hbeta','L_tot_Hbeta_ext',
-                         'L_tot_NII6583','L_tot_NII6583_ext',
-                         'L_tot_OII3727','L_tot_OII3727_ext',
-                         'L_tot_OIII5007','L_tot_OIII5007_ext',
-                         'L_tot_SII6716','L_tot_SII6716_ext'],
-            'units': ['AB apparent'] * 2 + ['h^2 erg/s'] * 12
+            'datasets': ['mag_UKIRT-K_o_tot_ext', 'mag_SDSSz0.1-r_o_tot_ext'] + line_datasets,
+            'units': ['AB apparent'] * 2 + ['1e40 h^2 erg/s'] * len(line_datasets)
         }
-    }
-    
+    } 
     return config
 
 
