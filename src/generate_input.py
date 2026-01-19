@@ -60,7 +60,7 @@ def generate_input_file(config, ivol, verbose=True):
     head.attrs[u'snapnum'] = config['snap']
     data_group = hf.create_group('data')
     hf.close()
-    print(f' * Generating file: {outfile}')
+    if verbose: print(f' * Generating file: {outfile}')
     
     # Make the selection, if relevant
     nomask = False; mask = None
