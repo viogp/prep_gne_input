@@ -8,6 +8,8 @@ import numpy as np
 import src.utils as u
 import src.cosmology as cosmo
 
+notnum  = -999.
+
 def generate_input_file(config, ivol, verbose=True):
     """
     Generate input file for generate_nebular_emission
@@ -223,7 +225,7 @@ def generate_input_file(config, ivol, verbose=True):
                     if calc_ratios and (prop in L_nom or prop in L_ext_nom):
                         if prop in L_nom:
                             il = L_nom.index(prop)
-                            ratios[il, vals <= 0.] = 0.
+                            ratios[il, vals <= 0.] = notnum
                             ratios[il,vals>0.] /= vals[vals>0.]
                         else:
                             il = L_ext_nom.index(prop)
