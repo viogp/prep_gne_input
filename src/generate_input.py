@@ -79,10 +79,7 @@ def generate_input_file(config, ivol, verbose=True):
             units = props['units']
 
             with h5py.File(filename, 'r') as hdf_file:
-                if group is None:
-                    hf = hdf_file
-                elif group in hdf_file:
-                    hf = hdf_file[group]
+                hf = u.open_hdf5_group(hdf_file, group)
 
                 # Read datasets and generate conditions
                 for ii, dataset in enumerate(datasets):
@@ -165,10 +162,7 @@ def generate_input_file(config, ivol, verbose=True):
                     if 'redshift' in check_props['datasets']:
                         zfilename = path + check_file
                         with h5py.File(zfilename, 'r') as hdf_zfile:
-                            if group is None:
-                                zhf = hdf_zfile
-                            elif group in hdf_zfile:
-                                zhf = hdf_zfile[group]
+                            zhf = u.open_hdf5_group(hdf_zfile, group)
                             # Read redshift
                             redshift = zhf['redshift'][()]
                             break
@@ -180,10 +174,7 @@ def generate_input_file(config, ivol, verbose=True):
         
         # Read data in each file    
         with h5py.File(filename, 'r') as hdf_file:
-            if group is None:
-                hf = hdf_file
-            elif group in hdf_file:
-                hf = hdf_file[group]
+            hf = u.open_hdf5_group(hdf_file, group)
                 
             # Extract properties
             for ii,prop in enumerate(datasets):

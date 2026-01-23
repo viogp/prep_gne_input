@@ -103,6 +103,32 @@ def resolve_group(hdf_file, group_pattern):
     return group_pattern
 
 
+def open_hdf5_group(hdf_file, group_pattern):
+    """
+    Get the appropriate group or root from an HDF5 file
+    
+    Parameters
+    ----------
+    hdf_file : h5py.File
+        Open HDF5 file object
+    group_pattern : str or None
+        Group name or pattern (e.g., 'Output###' for auto-detect)
+    
+    Returns
+    -------
+    h5py.Group or h5py.File or None
+        The resolved group, root file, or None if group not found
+    """
+    resolved_group = resolve_group(hdf_file, group_pattern)
+    
+    if resolved_group is None:
+        return hdf_file
+    elif resolved_group in hdf_file:
+        return hdf_file[resolved_group]
+    else:
+        return None
+
+
 def check_h5_structure(infile, datasets, group=None, verbose=True):
     """
     Check that the names given correspond to datasets in a hdf5 file
@@ -122,13 +148,8 @@ def check_h5_structure(infile, datasets, group=None, verbose=True):
     """
     try:
         with h5py.File(infile, 'r') as hdf_file:
-            # Resolve the group pattern
-            resolved_group = resolve_group(hdf_file, group)
-            if resolved_group is None:
-                hf = hdf_file
-            elif resolved_group in hdf_file:
-                hf = hdf_file[resolved_group]
-            else:
+            hf = open_hdf5_group(hdf_file, group)
+            if hf is None:
                 if verbose:
                     print(f'WARNING: Group (pattern) {group} not found in {infile}')
                 return False
