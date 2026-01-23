@@ -57,6 +57,52 @@ def combined_mask(alldata,low_lim,high_lim,verbose=True):
     return mask
 
 #---------------hdf5 files-----------------------------------------
+def get_output_group(hdf_file, base='Output'):
+    """
+    Find the first Output### group in an HDF5 file
+    
+    Parameters
+    ----------
+    hdf_file : h5py.File
+        Open HDF5 file object
+    base : str
+        Base name to search for (default: 'Output')
+    
+    Returns
+    -------
+    str or None
+        Name of the first matching group, or None if not found
+    """
+    for key in hdf_file.keys():
+        if key.startswith(base):
+            return key
+    return None
+
+
+def resolve_group(hdf_file, group_pattern):
+    """
+    Resolve a group pattern to an actual group name
+    
+    Parameters
+    ----------
+    hdf_file : h5py.File
+        Open HDF5 file object
+    group_pattern : str or None
+        Group name or pattern (e.g., 'Output###' for auto-detect)
+    
+    Returns
+    -------
+    str or None
+        Resolved group name, or None if pattern is None
+    """
+    if group_pattern is None:
+        return None
+    if '###' in group_pattern:
+        base = group_pattern.replace('###', '')
+        return get_output_group(hdf_file, base=base)
+    return group_pattern
+
+
 def check_h5_structure(infile, datasets, group=None, verbose=True):
     """
     Check that the names given correspond to datasets in a hdf5 file
@@ -67,8 +113,8 @@ def check_h5_structure(infile, datasets, group=None, verbose=True):
       Name of input file (this should be a hdf5 file)
     datasets : list
       Names of expected datasets
-    froup : string
-      Name of group where datasets are
+    group : string
+      Name of group where datasets are, or 'Output###' for auto-detect) 
 
     Return
     -------
@@ -76,11 +122,15 @@ def check_h5_structure(infile, datasets, group=None, verbose=True):
     """
     try:
         with h5py.File(infile, 'r') as hdf_file:
-            if group is None:
+            # Resolve the group pattern
+            resolved_group = resolve_group(hdf_file, group)
+            if resolved_group is None:
                 hf = hdf_file
-            elif group in hdf_file:
-                hf = hdf_file[group]
+            elif resolved_group in hdf_file:
+                hf = hdf_file[resolved_group]
             else:
+                if verbose:
+                    print(f'WARNING: Group (pattern) {group} not found in {infile}')
                 return False
 
             structure_ok = set(datasets).issubset(list(hf.keys()))

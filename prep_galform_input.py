@@ -9,21 +9,25 @@ from src.generate_test_files import generate_test_files
 
 verbose = True
 
-validate_files = False  # Check the structure of files
-generate_files = True # Generate input for generate_nebular_emission
+validate_files = True  # Check the structure of files
+generate_files = False # Generate input for generate_nebular_emission
 generate_testing_files = False # Generate reduced input for testing
 
+#-------------------------------------------------------------
+simtype = 'GP20SU' # Set the file configuration adequately 
+snap = 128
+subvols = list(range(1))
 #-------------------------------------------------------------
 #simtype = 'GP20UNIT1Gpc' # Set the file configuration adequately 
 #snap = 128
 #subvols = list(range(1))
 #-------------------------------------------------------------
-simtype = 'GP20' # Set the file configuration adequately 
-snap = 39 #61
-subvols = list(range(64))
+#simtype = 'GP20cosma' # Set the file configuration adequately 
+#snap = 39 #61
+#subvols = list(range(64))
 #-------------------------------------------------------------
 
-laptop = True  # Tests within laptop (different paths)
+laptop = False  # Tests within laptop (different paths)
 if laptop:
     subvols = list(range(2))
 
