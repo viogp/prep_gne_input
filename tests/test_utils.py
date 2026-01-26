@@ -35,6 +35,22 @@ class TestPredict(unittest.TestCase):
                 shutil.rmtree(cls.test_dir)
             except (OSError, PermissionError) as e:
                 print(f"Warning: Could not remove test directory {cls.test_dir}: {e}")
+
+    def test_get_path(self):
+        # Test izivol=True tests
+        path = u.get_path('/data/iz39/ivol', 5, izivol=True)
+        self.assertEqual(path, '/data/iz39/ivol5/')
+
+        path = u.get_path('/data/39/', 5, izivol=True)
+        self.assertEqual(path, '/data/39/5/')
+        
+        # Test izivol=False tests
+        path = u.get_path('/data/ivol', 5, izivol=False, ending='iz39/')
+        self.assertEqual(path, '/data/ivol5/iz39/')
+
+        path = u.get_path('/data/', 5, izivol=False, ending='39/')
+        self.assertEqual(path, '/data/5/39/')
+        
                 
     def test_combined_mask(self):
         vb = False

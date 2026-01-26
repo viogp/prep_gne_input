@@ -31,6 +31,7 @@ def generate_input_file(config, ivol, verbose=True):
     ending = str(ivol) + '/'
     root = config['root']
     path = root + ending
+    print(path); exit() ###here
     if (not os.path.exists(path)):
         print(f' No adecuate path: {path}')
         return False

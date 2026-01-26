@@ -1,6 +1,37 @@
 import h5py
 import numpy as np
 
+
+def get_path(root, ivol, izivol=True, ending=None):
+    """
+    Generate the appropriate file path based on the izivol flag.
+    
+    Parameters
+    ----------
+    root : str
+        Root path from config
+    ivol : int
+        Volume index number
+    izivol : bool
+        If True, path structure appends ivol at the end: root + ivol + '/'
+        If False, path structure: root + ivol + '/' + ending
+    ending : str, optional
+        Suffix to append after ivol when izivol=False (e.g., 'iz39/')
+    
+    Returns
+    -------
+    path : str
+    """
+    # Append volume number to root
+    path = root + str(ivol) + '/'
+    
+    # For izivol=False, also append the ending
+    if not izivol and ending:
+        path = path + ending
+    
+    return path
+
+
 def combined_mask(alldata,low_lim,high_lim,verbose=True):
     '''
     Combine conditions to different datasets into one mask

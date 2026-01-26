@@ -21,12 +21,12 @@ def validate_hdf5_file(config, ivol, verbose=True):
     """
     
     count_fails = 0
-    root = config['root']
     selection = config['selection']
     file_props = config['file_props']
     
-    path = root + str(ivol) + '/'
-    
+    path = u.get_path(config['root'],ivol,
+                    izivol=config['izivol'],ending=config['ending'])
+
     # Combine selection and file_props for validation
     if selection is None:
         allfiles = file_props

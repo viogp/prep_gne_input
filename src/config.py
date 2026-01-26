@@ -161,20 +161,26 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
         Configuration dictionary
     """
     # Path to files
-    #path = '/data2/users/olivia/galform_output/UNIT_PNG/UNIT_1GPC/'
-    path = '/home2/vgonzalez/Data/Galform/gp20data/'
-    #ending = 'iz'+str(snap)+'/ivol'
-    ending = '/ivol'
-    root = path+ending
-    
+    # SU1-------------------------------------------------------- 
+    path = '/data2/users/olivia/galform_output/SU1/SU1_250MPC_np_corrected/'
+    ending = 'iz'+str(snap)
+    izivol = False
+    # Example data------------------------------------------------ 
+    #path = '/home2/vgonzalez/Data/Galform/gp20data/'; ending = None
+    #izivol = True
+    #------------------------------------------------------------- 
+    root = path+'ivol'
+
     outroot = root
-    ####here 
+
     boxside = 125 #Mpc/h (whole volume 500Mpc/h)
     
     config = {
         # Paths
         'root': root,
         'outroot': outroot,
+        'izivol': izivol,
+        'ending': ending,
         
         # Cosmology parameters
         'h0': 0.704,
