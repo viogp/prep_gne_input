@@ -163,17 +163,20 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
     """
     # Path to files
     ln_As = 3.064
-    # SU1
-    outroot = ' ' ###here: Needs to be changed
+    # SU1 ----------------------------
+    outpath = '/home2/vgonzalez/Data/Galform/SU1/'
     path = '/data2/users/olivia/galform_output/SU1/SU1_z_tests/'
-    #path = '/data2/users/olivia/galform_output/SU2/SU2_z_tests/'
-    # SU2
-    ln_As = ln_As + np.log(1.05)
     #path = '/data2/users/olivia/galform_output/SU1/SU1_250MPC_np_corrected/'
-    #path = '/data2/users/olivia/galform_output/SU2/SU2_250MPC_np_corrected/'
+    ## SU2 ----------------------------
+    #ln_As = ln_As + np.log(1.05)
+    #outpath = '/home2/vgonzalez/Data/Galform/SU2/'
+    #path = '/data2/users/olivia/galform_output/SU2/SU2_z_tests/'
+    ##path = '/data2/users/olivia/galform_output/SU2/SU2_250MPC_np_corrected/'
+    # ----------------------------
     ending = 'iz'+str(snap)
     root = path+'ivol'
-    
+    outroot = outpath+ending+'/ivol'
+
     boxside = 250 #Mpc/h
 
     # Runs with several z output, need to find out group name

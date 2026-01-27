@@ -28,17 +28,9 @@ def generate_input_file(config, ivol, verbose=True):
     bool
         True if the file has been successfully generated, False otherwise
     """
-    ending = str(ivol) + '/'
-    root = config['root']
-    path = root + ending
-    print(path); exit() ###here
-    if (not os.path.exists(path)):
-        print(f' No adecuate path: {path}')
-        return False
-
     # Generate a header for the output file
     outroot = config['outroot']
-    outpath = outroot+ending
+    outpath = outroot+str(ivol) + '/'
     if (not os.path.exists(outpath)):
         try:
             os.makedirs(outpath)
@@ -62,9 +54,19 @@ def generate_input_file(config, ivol, verbose=True):
     head.attrs[u'mp_Msunh'] = config['mp']
     head.attrs[u'snapnum'] = config['snap']
     data_group = hf.create_group('data')
+    if 'fnl' in config:
+        head.attrs[u'fnl'] = config['fnl']
+    if 'ln_As' in config:
+        head.attrs[u'ln_As'] = config['ln_As']
     hf.close()
     if verbose: print(f' * Generating file: {outfile}')
-    
+
+    # Paths to files to be read
+    path = u.get_path(config['root'],ivol,ending=config['ending'])
+    except_file = config.get('except_file')
+    if except_file is not None:
+        except_path =  u.get_path(config['root'],ivol)
+
     # Make the selection, if relevant
     nomask = False; mask = None
     selection = config['selection']
@@ -72,7 +74,10 @@ def generate_input_file(config, ivol, verbose=True):
         nomask = True
     else:
         for ifile, props  in selection.items():
-            filename = path+ifile
+            if except_file is not None and ifile == config['except_file']:
+                filename = except_path+ifile
+            else:
+                filename = path+ifile
             group = props['group']
             datasets = props['datasets']
             lowl = props['low_limits']
@@ -107,7 +112,7 @@ def generate_input_file(config, ivol, verbose=True):
                     with h5py.File(outfile, 'a') as outf:
                         dd = outf['data'].create_dataset(datasets[ii], data=vals)
                         dd.attrs['units'] = units[ii]
-
+        print(filename); exit() ###here
     # Metallicity variables
     mcold_disc = config['mcold_disc']
     mcold_z_disc = config['mcold_z_disc']

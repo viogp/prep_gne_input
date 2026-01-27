@@ -9,8 +9,8 @@ from src.generate_test_files import generate_test_files
 
 verbose = True
 
-validate_files = True  # Check the structure of files
-generate_files = False # Generate input for generate_nebular_emission
+validate_files = False  # Check the structure of files
+generate_files = True # Generate input for generate_nebular_emission
 generate_testing_files = False # Generate reduced input for testing
 
 #-------------------------------------------------------------
