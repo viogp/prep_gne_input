@@ -26,8 +26,7 @@ def get_path(root, ivol, ending=None):
     path = root + str(ivol) + '/'
 
     if ending is not None: # Append the ending
-        path = path + ending
-        
+        path = path + ending + '/'
     return path
 
 

@@ -2,6 +2,7 @@
 Configuration of files to be read
 """
 import src.utils as u
+import numpy as np
 
 sims = ['GP20cosma','GP20SU'] 
 
@@ -161,14 +162,17 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
         Configuration dictionary
     """
     # Path to files
+    ln_As = 3.064
+    # SU1
+    outroot = ' ' ###here: Needs to be changed
     path = '/data2/users/olivia/galform_output/SU1/SU1_z_tests/'
     #path = '/data2/users/olivia/galform_output/SU2/SU2_z_tests/'
+    # SU2
+    ln_As = ln_As + np.log(1.05)
     #path = '/data2/users/olivia/galform_output/SU1/SU1_250MPC_np_corrected/'
     #path = '/data2/users/olivia/galform_output/SU2/SU2_250MPC_np_corrected/'
     ending = 'iz'+str(snap)
     root = path+'ivol'
-
-    outroot = root     ###here: Needs to be changed
     
     boxside = 250 #Mpc/h
 
@@ -183,13 +187,14 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
         'except_file': 'galaxies.hdf5',
         
         # Cosmology parameters
-        'h0': 0.704,
-        'omega0': 0.307,
-        'omegab': 0.0482,
-        'lambda0': 0.693,
+        'h0': 0.6774,
+        'omega0': 0.3089,
+        'omegab': 0.0486,
+        'lambda0': 0.6911,
         'boxside': boxside,
-        'mp': 9.35e8,  # Msun/h
-
+        'mp': 1.558975e8,  # Msun/h
+        'ln_As' : ln_As,  
+        
         # Metallicity calculation parameters
         'mcold_disc': 'mcold',
         'mcold_z_disc': 'cold_metal',
@@ -202,13 +207,12 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
     config['selection'] = {
         'galaxies.hdf5': {
             'group': group,
-            'datasets': ['mhhalo', 'xgal', 'ygal', 'zgal'],
-            'units': ['Msun/h', 'Mpc/h', 'Mpc/h', 'Mpc/h'],
-            'low_limits': [20 * config['mp'], 0., 0., 0.],
-            'high_limits': [None, boxside, boxside, boxside]
+            'datasets': ['mhhalo'],
+            'units': ['Msun/h'],
+            'low_limits': [20 * config['mp']],
+            'high_limits': [None]
         }
     }
-
 
     # Define the lines and luminosity names
     config['lines'] = ['Halpha', 'Hbeta', 'NII6583', 'OII3727', 'OIII5007', 'SII6716']
@@ -246,8 +250,13 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
         },
         'tosedfit.hdf5': {
             'group': group,
-            'datasets': ['mag_UKIRT-K_o_tot_ext', 'mag_SDSSz0.1-r_o_tot_ext'] + line_datasets,
-            'units': ['AB apparent'] * 2 + ['1e40 h^2 erg/s'] * len(line_datasets)
+            'datasets': ['mag_UKIRT-K_o_tot_ext', 'mag_SDSSz0.1-r_o_tot_ext'],
+            'units': ['AB apparent'] * 2
+        },
+        'elgs.hdf5': {
+            'group': group,
+            'datasets': line_datasets,
+            'units': ['1e40 h^2 erg/s'] * len(line_datasets)
         }
     } 
     return config
