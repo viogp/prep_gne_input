@@ -1,8 +1,10 @@
+import os
+from glob import glob
 import h5py
 import numpy as np
 
 
-def get_path(root, ivol, izivol=True, ending=None):
+def get_path(root, ivol, ending=None):
     """
     Generate the appropriate file path based on the izivol flag.
     
@@ -12,23 +14,20 @@ def get_path(root, ivol, izivol=True, ending=None):
         Root path from config
     ivol : int
         Volume index number
-    izivol : bool
-        If True, path structure appends ivol at the end: root + ivol + '/'
-        If False, path structure: root + ivol + '/' + ending
-    ending : str, optional
-        Suffix to append after ivol when izivol=False (e.g., 'iz39/')
-    
+    ending : str
+        If None, path structure appends ivol at the end: root + ivol + '/'
+        Otherwise: root + ivol + '/' + ending
+
     Returns
     -------
     path : str
     """
     # Append volume number to root
     path = root + str(ivol) + '/'
-    
-    # For izivol=False, also append the ending
-    if not izivol and ending:
+
+    if ending is not None: # Append the ending
         path = path + ending
-    
+        
     return path
 
 
@@ -87,54 +86,54 @@ def combined_mask(alldata,low_lim,high_lim,verbose=True):
     mask = np.where(combined_cuts)[0]
     return mask
 
-#---------------hdf5 files-----------------------------------------
-def get_output_group(hdf_file, base='Output'):
+
+def get_group_name(root, snap, group_base='Output',ndigits=3, dir_base='iz'):
     """
-    Find the first Output### group in an HDF5 file
+    Get the name of the hdf5 group to be read for a given snapshot.
+    
+    Scans the root directory for subdirectories matching 'iz<number>',
+    sorts the numbers in descending order, and returns a n-character
+    string representing the 1-based index of the given snap.
     
     Parameters
     ----------
-    hdf_file : h5py.File
-        Open HDF5 file object
-    base : str
-        Base name to search for (default: 'Output')
-    
+    root : str
+        Root to higher level directories
+    snap : str or int
+        The snapshot number to find (the number after 'iz')
+    group_base : str
+        The base for the group name
+    ndigits : int
+        Number of characters to convert digits to
+    dir_base : str
+        The base for the redshift directories
+
     Returns
     -------
-    str or None
-        Name of the first matching group, or None if not found
+    group_name : str
     """
-    for key in hdf_file.keys():
-        if key.startswith(base):
-            return key
-    return None
-
-
-def resolve_group(hdf_file, group_pattern):
-    """
-    Resolve a group pattern to an actual group name
+    group_name = group_base
     
-    Parameters
-    ----------
-    hdf_file : h5py.File
-        Open HDF5 file object
-    group_pattern : str or None
-        Group name or pattern (e.g., 'Output###' for auto-detect)
-    
-    Returns
-    -------
-    str or None
-        Resolved group name, or None if pattern is None
-    """
-    if group_pattern is None:
+    # Find output snapshots
+    vol_dirs = glob(root+'*')
+    if len(vol_dirs) < 1:
+        print(f'STOP: No adequate directories with root {root}')
         return None
-    if '###' in group_pattern:
-        base = group_pattern.replace('###', '')
-        return get_output_group(hdf_file, base=base)
-    return group_pattern
+    zroot = os.path.join(vol_dirs[0],dir_base)
+    z_dirs = glob(zroot+'*')
+    if len(z_dirs) < 1:
+        print(f'STOP: No adequate directories with root {zroot}')
+        return None
+    zz = [int(os.path.basename(d).replace(dir_base, '')) for d in z_dirs]
+    zz.sort(reverse=True)
 
+    # Get the index of the snapshot as n-digits characters
+    oonum = zz.index(int(snap)) + 1
+    group_name += f'{oonum:0{ndigits}d}'
+    return group_name
 
-def open_hdf5_group(hdf_file, group_pattern):
+#---------------hdf5 files-----------------------------------------
+def open_hdf5_group(hdf_file, group):
     """
     Get the appropriate group or root from an HDF5 file
     
@@ -142,20 +141,17 @@ def open_hdf5_group(hdf_file, group_pattern):
     ----------
     hdf_file : h5py.File
         Open HDF5 file object
-    group_pattern : str or None
-        Group name or pattern (e.g., 'Output###' for auto-detect)
+    group : str or None
+        Group name
     
     Returns
     -------
     h5py.Group or h5py.File or None
-        The resolved group, root file, or None if group not found
-    """
-    resolved_group = resolve_group(hdf_file, group_pattern)
-    
-    if resolved_group is None:
+    """   
+    if group is None:
         return hdf_file
-    elif resolved_group in hdf_file:
-        return hdf_file[resolved_group]
+    elif group in hdf_file:
+        return hdf_file[group]
     else:
         return None
 

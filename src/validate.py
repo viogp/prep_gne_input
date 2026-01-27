@@ -1,7 +1,7 @@
 import sys
 import src.utils as u
 
-def validate_hdf5_file(config, ivol, verbose=True):
+def validate_hdf5_file(config, snap, ivol, verbose=True):
     """
     Validate that all HDF5 files have the expected structure
     
@@ -9,6 +9,8 @@ def validate_hdf5_file(config, ivol, verbose=True):
     ----------
     config : dict
         Configuration dictionary containing paths and file properties
+    snap : integer
+        Number of the simulation snapshot
     ivol : integer
         Number of subvolume
     verbose : bool
@@ -24,18 +26,28 @@ def validate_hdf5_file(config, ivol, verbose=True):
     selection = config['selection']
     file_props = config['file_props']
     
-    path = u.get_path(config['root'],ivol,
-                    izivol=config['izivol'],ending=config['ending'])
+    path = u.get_path(config['root'],ivol,ending=config['ending'])
+
+    # File to be read a directory above, if applicable
+    except_file = config.get('except_file')
+    if except_file is not None:
+        except_path =  u.get_path(config['root'],ivol)
 
     # Combine selection and file_props for validation
     if selection is None:
         allfiles = file_props
     else:
         allfiles = {**selection, **file_props}
-    
+
     for ifile, props in allfiles.items():
         datasets = props['datasets']
         group = props.get('group')
+
+        if except_file is not None and ifile == config['except_file']:
+            print (except_path+ifile, group); exit() ###here
+            structure_ok = u.check_h5_structure(except_path+ifile,
+                                                datasets,group=group)
+        print(ifile,group); continue ###here
         structure_ok = u.check_h5_structure(path+ifile,datasets,group=group)
         if not structure_ok:
             count_fails += 1

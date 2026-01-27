@@ -15,7 +15,7 @@ generate_testing_files = False # Generate reduced input for testing
 
 #-------------------------------------------------------------
 simtype = 'GP20SU' # Set the file configuration adequately 
-snap = 98
+snap = 96
 subvols = list(range(2))
 #-------------------------------------------------------------
 #simtype = 'GP20UNIT1Gpc' # Set the file configuration adequately 
@@ -41,7 +41,7 @@ config = get_config(simtype,snap,laptop=laptop)
 if validate_files:
     count_failures = 0
     for ivol in subvols:
-        success = validate_hdf5_file(config, ivol, verbose=verbose)
+        success = validate_hdf5_file(config, snap, ivol, verbose=verbose)
         if not success: count_failures += 1
     if count_failures<1: print(f'SUCCESS: All {len(subvols)} subvolumes have valid hdf5 files.')
         

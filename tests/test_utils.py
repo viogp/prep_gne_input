@@ -37,21 +37,16 @@ class TestPredict(unittest.TestCase):
                 print(f"Warning: Could not remove test directory {cls.test_dir}: {e}")
 
     def test_get_path(self):
-        # Test izivol=True tests
-        path = u.get_path('/data/iz39/ivol', 5, izivol=True)
+        path = u.get_path('/data/iz39/ivol', 5)
         self.assertEqual(path, '/data/iz39/ivol5/')
 
-        path = u.get_path('/data/39/', 5, izivol=True)
+        path = u.get_path('/data/39/', 5)
         self.assertEqual(path, '/data/39/5/')
         
-        # Test izivol=False tests
-        path = u.get_path('/data/ivol', 5, izivol=False, ending='iz39/')
+        path = u.get_path('/data/ivol', 5, ending='iz39/')
         self.assertEqual(path, '/data/ivol5/iz39/')
 
-        path = u.get_path('/data/', 5, izivol=False, ending='39/')
-        self.assertEqual(path, '/data/5/39/')
         
-                
     def test_combined_mask(self):
         vb = False
         
@@ -74,6 +69,44 @@ class TestPredict(unittest.TestCase):
         np.testing.assert_array_equal(mask,[1])
 
 
+    def test_get_group_name(self):
+        # Create subdirectories to simulate the volume/redshift structure
+        vol_dir = os.path.join(self.test_dir, 'ivol0')
+        os.makedirs(vol_dir, exist_ok=True)
+        
+        # Create iz directories with various snapshot numbers
+        for iz in [128, 96, 78, 50]:
+            os.makedirs(os.path.join(vol_dir, f'iz{iz}'), exist_ok=True)
+        
+        # Test: sorted descending is [128, 96, 78, 50]
+        # snap=128 should be index 1 -> 'Output001'
+        root = os.path.join(self.test_dir, 'ivol')
+        result = u.get_group_name(root, 128)
+        self.assertEqual(result, 'Output001')
+        
+        # snap=96 should be index 2 -> 'Output002'
+        result = u.get_group_name(root, 96)
+        self.assertEqual(result, 'Output002')
+        
+        # snap=50 should be index 4 -> 'Output004'
+        result = u.get_group_name(root, '50')  # Test with string input
+        self.assertEqual(result, 'Output004')
+        
+        # Test custom group_base and ndigits
+        result = u.get_group_name(root, 78, group_base='Snap', ndigits=5)
+        self.assertEqual(result, 'Snap00003')
+        
+        # Test with non-existent root
+        result = u.get_group_name('/nonexistent/path/', 128)
+        self.assertIsNone(result)
+        
+        # Test with root that has no iz directories
+        empty_vol = os.path.join(self.test_dir, 'empty_vol')
+        os.makedirs(empty_vol, exist_ok=True)
+        result = u.get_group_name(os.path.join(self.test_dir, 'empty_'), 128)
+        self.assertIsNone(result)
+
+        
     def test_check_h5_structure(self):
         vb = False
         ss = u.check_h5_structure('notfile',['type'],verbose=vb)
