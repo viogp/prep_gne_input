@@ -10,7 +10,7 @@ import src.cosmology as cosmo
 
 notnum  = -999.
 
-def generate_input_file(config, ivol, verbose=True):
+def generate_input_file(config, ivol, verbose=False):
     """
     Generate input file for generate_nebular_emission
     
@@ -59,7 +59,6 @@ def generate_input_file(config, ivol, verbose=True):
     if 'ln_As' in config:
         head.attrs[u'ln_As'] = config['ln_As']
     hf.close()
-    if verbose: print(f' * Generating file: {outfile}')
 
     # Paths to files to be read
     path = u.get_path(config['root'],ivol,ending=config['ending'])
@@ -90,7 +89,7 @@ def generate_input_file(config, ivol, verbose=True):
                 # Read datasets and generate conditions
                 for ii, dataset in enumerate(datasets):
                     if ii == 0:
-                        alldata = hf[dataset][:]
+                        alldata = hf[dataset][:].reshape(1, -1)
                     else:
                         alldata = np.vstack((alldata,hf[dataset][:]))
 
@@ -112,7 +111,7 @@ def generate_input_file(config, ivol, verbose=True):
                     with h5py.File(outfile, 'a') as outf:
                         dd = outf['data'].create_dataset(datasets[ii], data=vals)
                         dd.attrs['units'] = units[ii]
-        print(filename); exit() ###here
+
     # Metallicity variables
     mcold_disc = config['mcold_disc']
     mcold_z_disc = config['mcold_z_disc']
@@ -124,7 +123,10 @@ def generate_input_file(config, ivol, verbose=True):
     file_props = config['file_props']
     redshift = None; tomag = None
     for ifile, props  in file_props.items():
-        filename = path+ifile
+        if except_file is not None and ifile == config['except_file']:
+            filename = except_path+ifile
+        else:
+            filename = path+ifile
         group = props['group']
         datasets = props['datasets']
 
@@ -136,6 +138,33 @@ def generate_input_file(config, ivol, verbose=True):
         calc_Zbst  = set([mcold_burst,mcold_z_burst]).issubset(datasets)
         if calc_Zbst:
             Zbst = np.ones(len(mask), dtype=float)
+
+        # Check if magnitudes are included
+        calc_mag = any('mag' in s for s in datasets)
+        if calc_mag and tomag is None:
+            cosmo.set_cosmology(omega0=config['omega0'],
+                                omegab=config['omegab'],
+                                lambda0=config['lambda0'],
+                                h0=config['h0'],
+                                universe="Flat",include_radiation=False)
+            if redshift is None:
+                # Find file with redshift 
+                for check_file, check_props in file_props.items():
+                    if 'redshift' in check_props['datasets']:
+                        if except_file is not None and check_file == config['except_file']:
+                            zfilename = except_path + check_file
+                        else:
+                            zfilename = path + check_file
+                        with h5py.File(zfilename, 'r') as hdf_zfile:
+                            zhf = u.open_hdf5_group(hdf_zfile, group)
+                            # Read redshift
+                            redshift = zhf['redshift'][()]
+                            break
+                redshift = max(redshift, 0.1) # To avoid no correction
+                tomag = cosmo.band_corrected_distance_modulus(redshift)
+                DL = cosmo.luminosity_distance(redshift)
+                with h5py.File(outfile, 'a') as outf:
+                    outf['header'].attrs['luminosity_distance_Mpch'] = DL
 
         # Check if luminosities are included
         L_nom = []; L_ext_nom = [] ; ratio_nom = []
@@ -153,30 +182,9 @@ def generate_input_file(config, ivol, verbose=True):
                 ratios = np.ones((nl,len(mask)), dtype=float)
             else:
                 calc_ratios = False
-
-        # Check if magnitudes are included
-        calc_mag = any('mag' in s for s in datasets)
-        if calc_mag and tomag is None:
-            cosmo.set_cosmology(omega0=config['omega0'],
-                                omegab=config['omegab'],
-                                lambda0=config['lambda0'],
-                                h0=config['h0'],
-                                universe="Flat",include_radiation=False)
-            if redshift is None:
-                # Find file with redshift 
-                for check_file, check_props in file_props.items():
-                    if 'redshift' in check_props['datasets']:
-                        zfilename = path + check_file
-                        with h5py.File(zfilename, 'r') as hdf_zfile:
-                            zhf = u.open_hdf5_group(hdf_zfile, group)
-                            # Read redshift
-                            redshift = zhf['redshift'][()]
-                            break
-            redshift = max(redshift, 0.1) # To avoid no correction
-            tomag = cosmo.band_corrected_distance_modulus(redshift)
-            DL = cosmo.luminosity_distance(redshift)
-            with h5py.File(outfile, 'a') as outf:
-                outf['header'].attrs['luminosity_distance_Mpch'] = DL
+        
+        if verbose: print(f'  - Reading {filename} (extra calcs:',
+                          f'{calc_Zdisc}, {calc_Zbst}, {calc_mag}, {calc_ratios})')
         
         # Read data in each file    
         with h5py.File(filename, 'r') as hdf_file:
@@ -191,10 +199,9 @@ def generate_input_file(config, ivol, verbose=True):
                 else:
                     count_props += 1
                     vals = None
-                    if nomask:
-                        vals = hf[prop][:]                            
-                    else:
-                        vals = hf[prop][mask]
+                    vals = hf[prop][:]
+                    if not nomask:
+                        vals = vals[mask]
                     if vals is None: continue
 
                     if calc_Zdisc and (prop==mcold_disc or prop==mcold_z_disc):
@@ -209,7 +216,7 @@ def generate_input_file(config, ivol, verbose=True):
                             Zbst[vals>0.] /= vals[vals>0.]
                         else:
                             Zbst *= vals
-
+                    
                     if(prop!=mcold_z_disc and prop!=mcold_z_burst and prop not in L_ext_nom):
                         with h5py.File(outfile, 'a') as outf:
                             if 'mag' in prop:
@@ -218,7 +225,7 @@ def generate_input_file(config, ivol, verbose=True):
                                     print(f'- Converting {prop} into an apparent mag')
                             dd = outf['data'].create_dataset(prop, data=vals)
                             dd.attrs['units'] = props['units'][ii]
-
+                    
                     if calc_ratios and (prop in L_nom or prop in L_ext_nom):
                         if prop in L_nom:
                             il = L_nom.index(prop)
@@ -237,11 +244,13 @@ def generate_input_file(config, ivol, verbose=True):
             with h5py.File(outfile, 'a') as outf:
                 dd = outf['data'].create_dataset('Zgas_bst', data=Zbst)
                 dd.attrs['units'] = 'M_Z/M'
-
+        
         # Write luminosity ratios, if required
         if calc_ratios:
             with h5py.File(outfile, 'a') as outf:
                 for il, nom in enumerate(ratio_nom):
                     dd = outf['data'].create_dataset(nom, data=ratios[il,:])
                     dd.attrs['units'] = 'L_ext/L (dimensionless)'
+                    
+    print(f' * Generated file: {outfile}')
     return True

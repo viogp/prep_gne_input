@@ -4,7 +4,7 @@ Configuration of files to be read
 import src.utils as u
 import numpy as np
 
-sims = ['GP20cosma','GP20SU'] 
+sims = ['GP20cosma','GP20SU','GP20UNIT1Gpc'] 
 
 def get_config(simtype, snap, laptop=False, verbose=False):
     """
@@ -197,6 +197,128 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
         'boxside': boxside,
         'mp': 1.558975e8,  # Msun/h
         'ln_As' : ln_As,  
+        
+        # Metallicity calculation parameters
+        'mcold_disc': 'mcold',
+        'mcold_z_disc': 'cold_metal',
+        'mcold_burst': 'mcold_burst',
+        'mcold_z_burst': 'metals_burst',
+    }
+    config['snap'] = snap
+    
+    # File selection criteria
+    config['selection'] = {
+        'galaxies.hdf5': {
+            'group': group,
+            'datasets': ['mhhalo'],
+            'units': ['Msun/h'],
+            'low_limits': [20 * config['mp']],
+            'high_limits': [None]
+        }
+    }
+
+    # Define the lines and luminosity names
+    config['lines'] = ['Halpha', 'Hbeta', 'NII6583', 'OII3727', 'OIII5007', 'SII6716']
+    config['line_prefix'] = 'L_tot_'
+    config['line_suffix_ext'] = '_ext'
+
+    line_datasets = []
+    for line in config['lines']:
+        line_datasets.append(f"{config['line_prefix']}{line}")
+        line_datasets.append(f"{config['line_prefix']}{line}{config['line_suffix_ext']}")
+
+    # File properties to extract
+    config['file_props'] = {
+        'galaxies.hdf5': {
+            'group': group,
+            'datasets': ['redshift', 'index', 'type',
+                         'vxgal', 'vygal', 'vzgal',
+                         'rbulge', 'rcomb', 'rdisk', 'mhot', 'vbulge',
+                         'mcold', 'mcold_burst', 'cold_metal', 'metals_burst',
+                         'mstars_bulge', 'mstars_burst', 'mstars_disk',
+                         'mstardot', 'mstardot_burst', 'mstardot_average',
+                         'M_SMBH', 'SMBH_Mdot_hh', 'SMBH_Mdot_stb', 'SMBH_Spin'],
+            'units': ['redshift', 'Host halo index', 'Gal. type (central=0)',
+                      'km/s','km/s','km/s',
+                      'Mpc/h', 'Mpc/h', 'Mpc/h', 'Msun/h', 'km/s',
+                      'Msun/h', 'Msun/h', 'Msun/h', 'Msun/h',
+                      'Msun/h', 'Msun/h', 'Msun/h',
+                      'Msun/h/Gyr', 'Msun/h/Gyr', 'Msun/h/Gyr',
+                      'Msun/h', 'Msun/h/Gyr', 'Msun/h/Gyr', 'Spin']
+        },
+        'agn.hdf5': {
+            'group': group,
+            'datasets': ['Lbol_AGN'],
+            'units': ['1e40 h^-2 erg/s']
+        },
+        'tosedfit.hdf5': {
+            'group': group,
+            'datasets': ['mag_UKIRT-K_o_tot_ext', 'mag_SDSSz0.1-r_o_tot_ext'],
+            'units': ['AB apparent'] * 2
+        },
+        'elgs.hdf5': {
+            'group': group,
+            'datasets': line_datasets,
+            'units': ['1e40 h^2 erg/s'] * len(line_datasets)
+        }
+    } 
+    return config
+
+
+
+def get_GP20UNIT1Gpc_config(snap, laptop=False, verbose=False):
+    """
+    Get configuration for GP20 runs on the UNIT 1 Gpc/h simulation
+    
+    Parameters
+    ----------
+    snap : integer
+        Snapshot number
+    laptop : bool, optional
+        If True, use local test configuration
+    verbose : bool, optional
+        If True, print further messages
+    
+    Returns
+    -------
+    config: dict
+        Configuration dictionary
+    """
+    # Path to files
+    # ----------------------------
+    fnl = 0
+    outpath = '/home2/vgonzalez/Data/Galform/UNIT1GPC_fnl0/'
+    path = '/data2/users/olivia/galform_output/UNIT_PNG/LRG_1_and_3/'
+    path = '/data2/users/olivia/galform_output/UNIT_PNG/UNIT_1GPC/'
+    # ----------------------------
+    fnl = 100
+    outpath = '/home2/vgonzalez/Data/Galform/UNIT1GPC_fnl100/'
+    path = '/data2/users/olivia/galform_output/UNIT_PNG100/UNITPNG100_1GPC/'
+    # ----------------------------
+    ending = 'iz'+str(snap)
+    root = path+'ivol'
+    outroot = outpath+ending+'/ivol'
+
+    boxside = 1000 #Mpc/h
+
+    # Runs with several z output, need to find out group name
+    group = u.get_group_name(root,snap)
+    
+    config = {
+        # Paths
+        'root': root,
+        'outroot': outroot,
+        'ending': ending,
+        'except_file': 'galaxies.hdf5',
+        
+        # Cosmology parameters
+        'h0': 0.6774,
+        'omega0': 0.3089,
+        'omegab': 0.0486,
+        'lambda0': 0.6911,
+        'boxside': boxside,
+        'mp': 1.24718e9,  # Msun/h
+        'fnl' : fnl,  
         
         # Metallicity calculation parameters
         'mcold_disc': 'mcold',
