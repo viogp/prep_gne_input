@@ -6,7 +6,7 @@ import numpy as np
 
 sims = ['GP20cosma','GP20SU','GP20UNIT1Gpc'] 
 
-def get_config(simtype, snap, laptop=False, verbose=False):
+def get_config(simtype, snap, subvols, laptop=False, verbose=False):
     """
     Get general configuration
     
@@ -16,6 +16,8 @@ def get_config(simtype, snap, laptop=False, verbose=False):
         Simulation type (must be in sims list)
     snap : integer
         Snapshot number
+    subvols : list of integers
+        List of subvolumes to be considered
     laptop : bool
         If True, use local test configuration
     verbose : bool
@@ -35,11 +37,11 @@ def get_config(simtype, snap, laptop=False, verbose=False):
 
     function_name = f'get_{simtype}_config'
     config_function = globals()[function_name]
-    config = config_function(snap,laptop=laptop, verbose=verbose)
+    config = config_function(snap, subvols, laptop=laptop, verbose=verbose)
     return config
 
 
-def get_GP20cosma_config(snap, laptop=False, verbose=False):
+def get_GP20cosma_config(snap, subvols, laptop=False, verbose=False):
     """
     Get configuration for GP20 runs
     
@@ -47,6 +49,8 @@ def get_GP20cosma_config(snap, laptop=False, verbose=False):
     ----------
     snap : integer
         Snapshot number
+    subvols : list of integers
+        List of subvolumes to be considered
     laptop : bool, optional
         If True, use local test configuration
     verbose : bool, optional
@@ -143,7 +147,7 @@ def get_GP20cosma_config(snap, laptop=False, verbose=False):
     return config
 
 
-def get_GP20SU_config(snap, laptop=False, verbose=False):
+def get_GP20SU_config(snap, subvols, laptop=False, verbose=False):
     """
     Get configuration for GP20 runs
     
@@ -151,6 +155,8 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
     ----------
     snap : integer
         Snapshot number
+    subvols : list of integers
+        List of subvolumes to be considered
     laptop : bool, optional
         If True, use local test configuration
     verbose : bool, optional
@@ -180,7 +186,7 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
     boxside = 250 #Mpc/h
 
     # Runs with several z output, need to find out group name
-    group = u.get_group_name(root,snap)
+    group = u.get_group_name(root,snap,subvols)
     
     config = {
         # Paths
@@ -266,7 +272,7 @@ def get_GP20SU_config(snap, laptop=False, verbose=False):
 
 
 
-def get_GP20UNIT1Gpc_config(snap, laptop=False, verbose=False):
+def get_GP20UNIT1Gpc_config(snap, subvols, laptop=False, verbose=False):
     """
     Get configuration for GP20 runs on the UNIT 1 Gpc/h simulation
     
@@ -274,6 +280,8 @@ def get_GP20UNIT1Gpc_config(snap, laptop=False, verbose=False):
     ----------
     snap : integer
         Snapshot number
+    subvols : list of integers
+        List of subvolumes to be considered
     laptop : bool, optional
         If True, use local test configuration
     verbose : bool, optional
@@ -289,7 +297,7 @@ def get_GP20UNIT1Gpc_config(snap, laptop=False, verbose=False):
     fnl = 0
     outpath = '/home2/vgonzalez/Data/Galform/UNIT1GPC_fnl0/'
     path = '/data2/users/olivia/galform_output/UNIT_PNG/LRG_1_and_3/'
-    path = '/data2/users/olivia/galform_output/UNIT_PNG/UNIT_1GPC/'
+    #path = '/data2/users/olivia/galform_output/UNIT_PNG/UNIT_1GPC/'
     # ----------------------------
     fnl = 100
     outpath = '/home2/vgonzalez/Data/Galform/UNIT1GPC_fnl100/'
@@ -302,7 +310,7 @@ def get_GP20UNIT1Gpc_config(snap, laptop=False, verbose=False):
     boxside = 1000 #Mpc/h
 
     # Runs with several z output, need to find out group name
-    group = u.get_group_name(root,snap)
+    group = u.get_group_name(root,snap,subvols)
     
     config = {
         # Paths

@@ -69,43 +69,64 @@ class TestPredict(unittest.TestCase):
         np.testing.assert_array_equal(mask,[1])
 
 
-    def test_get_group_name(self):
-        # Create subdirectories to simulate the volume/redshift structure
-        vol_dir = os.path.join(self.test_dir, 'ivol0')
-        os.makedirs(vol_dir, exist_ok=True)
+    def test_get_zz_subvols(self):
+        vb = False    
+        # Create multiple subvolume directories with matching iz subdirectories
+        for ivol in [0, 1, 2]:
+            vol_dir = os.path.join(self.test_dir, f'subvol{ivol}')
+            os.makedirs(vol_dir, exist_ok=True)
+            for iz in [100, 75, 50, 25]:
+                os.makedirs(os.path.join(vol_dir, f'iz{iz}'), exist_ok=True)
         
-        # Create iz directories with various snapshot numbers
-        for iz in [128, 96, 78, 50]:
-            os.makedirs(os.path.join(vol_dir, f'iz{iz}'), exist_ok=True)
+        # Test: all subvolumes have matching iz directories
+        root = os.path.join(self.test_dir, 'subvol')
+        result = u.get_zz_subvols(root, [0, 1, 2], verbose=vb)
+        self.assertEqual(result, [100, 75, 50, 25])
         
-        # Test: sorted descending is [128, 96, 78, 50]
-        # snap=128 should be index 1 -> 'Output001'
-        root = os.path.join(self.test_dir, 'ivol')
-        result = u.get_group_name(root, 128)
-        self.assertEqual(result, 'Output001')
+        # Test: some subvolumes don't exist (should skip them)
+        result = u.get_zz_subvols(root, [0, 5, 6], verbose=vb)
+        self.assertEqual(result, [100, 75, 50, 25])
         
-        # snap=96 should be index 2 -> 'Output002'
-        result = u.get_group_name(root, 96)
-        self.assertEqual(result, 'Output002')
+        # Test: single valid subvolume
+        result = u.get_zz_subvols(root, [1], verbose=vb)
+        self.assertEqual(result, [100, 75, 50, 25])
         
-        # snap=50 should be index 4 -> 'Output004'
-        result = u.get_group_name(root, '50')  # Test with string input
-        self.assertEqual(result, 'Output004')
+        # Test: custom dir_base
+        vol_custom = os.path.join(self.test_dir, 'customvol0')
+        os.makedirs(vol_custom, exist_ok=True)
+        for snap in [10, 20, 30]:
+            os.makedirs(os.path.join(vol_custom, f'snap{snap}'), exist_ok=True)
         
-        # Test custom group_base and ndigits
-        result = u.get_group_name(root, 78, group_base='Snap', ndigits=5)
-        self.assertEqual(result, 'Snap00003')
+        root_custom = os.path.join(self.test_dir, 'customvol')
+        result = u.get_zz_subvols(root_custom, [0], dir_base='snap', verbose=vb)
+        self.assertEqual(result, [30, 20, 10])
         
-        # Test with non-existent root
-        result = u.get_group_name('/nonexistent/path/', 128)
-        self.assertIsNone(result)
+        # Test: no valid directories -> sys.exit(1)
+        with self.assertRaises(SystemExit) as cm:
+            u.get_zz_subvols('/nonexistent/path/', [0, 1], verbose=vb)
+        self.assertEqual(cm.exception.code, 1)
         
-        # Test with root that has no iz directories
-        empty_vol = os.path.join(self.test_dir, 'empty_vol')
+        # Test: subvolumes exist but have no iz directories -> sys.exit(1)
+        empty_vol = os.path.join(self.test_dir, 'emptyvol0')
         os.makedirs(empty_vol, exist_ok=True)
-        result = u.get_group_name(os.path.join(self.test_dir, 'empty_'), 128)
-        self.assertIsNone(result)
-
+        with self.assertRaises(SystemExit) as cm:
+            u.get_zz_subvols(os.path.join(self.test_dir, 'emptyvol'), [0], verbose=vb)
+        self.assertEqual(cm.exception.code, 1)
+        
+        # Test: mismatched iz directories between subvolumes -> sys.exit(1)
+        mismatch_vol0 = os.path.join(self.test_dir, 'mismatchvol0')
+        mismatch_vol1 = os.path.join(self.test_dir, 'mismatchvol1')
+        os.makedirs(mismatch_vol0, exist_ok=True)
+        os.makedirs(mismatch_vol1, exist_ok=True)
+        for iz in [100, 50]:
+            os.makedirs(os.path.join(mismatch_vol0, f'iz{iz}'), exist_ok=True)
+        for iz in [100, 75]:  # Different from vol0
+            os.makedirs(os.path.join(mismatch_vol1, f'iz{iz}'), exist_ok=True)
+        
+        with self.assertRaises(SystemExit) as cm:
+            u.get_zz_subvols(os.path.join(self.test_dir, 'mismatchvol'), [0, 1], verbose=vb)
+        self.assertEqual(cm.exception.code, 1)
+        
         
     def test_check_h5_structure(self):
         vb = False

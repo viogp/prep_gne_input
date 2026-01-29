@@ -1,4 +1,4 @@
-import os
+import sys, os
 from glob import glob
 import h5py
 import numpy as np
@@ -26,7 +26,7 @@ def get_path(root, ivol, ending=None):
     path = root + str(ivol) + '/'
 
     if ending is not None: # Append the ending
-        path = path + ending + '/'
+        path = path + ending.rstrip('/') + '/'
     return path
 
 
@@ -86,7 +86,65 @@ def combined_mask(alldata,low_lim,high_lim,verbose=True):
     return mask
 
 
-def get_group_name(root, snap, group_base='Output',ndigits=3, dir_base='iz'):
+def get_zz_subvols(root, subvols, dir_base='iz',verbose=False):
+    """
+    Check which subvolume directories exist and 
+    verify they all have the same redshift subdirectories.
+
+    Parameters
+    ----------
+    root : str
+        Root to higher level directories
+    subvols : list of int
+        List of subvolumes to check
+    dir_base : str
+        The base for the redshift directories
+
+    Returns
+    -------
+    zz : list of int
+        Sorted list of redshift indices (descending order)
+    """
+    zz_reference = None
+    first_vol_dir = None
+
+    for ivol in subvols:
+        vol_dir = root + str(ivol)
+        if not os.path.exists(vol_dir):
+            if verbose:
+                print(f'WARNING: Directory {vol_dir} does not exist')
+            continue
+
+        # Find redshift subdirectories
+        zroot = os.path.join(vol_dir, dir_base)
+        z_dirs = glob(zroot + '*')
+        if len(z_dirs) < 1:
+            if verbose:
+                print(f'WARNING: No {dir_base}* directories in {vol_dir}')
+            continue
+
+        # Find output snapshots
+        zz = [int(os.path.basename(d).replace(dir_base, '')) for d in z_dirs]
+        zz.sort(reverse=True)
+
+        # Check that all subvolumes have the same snapshots
+        if zz_reference is None:
+            zz_reference = zz
+            first_vol_dir = vol_dir
+        elif zz != zz_reference:
+            print(f'STOP: Mismatch in {dir_base}* directories')
+            print(f'  {first_vol_dir}: {zz_reference}')
+            print(f'  {vol_dir}: {zz}')
+            sys.exit(1)
+
+    if zz_reference is None:
+        print(f'STOP: No valid directories found in {root} for subvols {subvols}')
+        sys.exit(1)
+    return zz_reference
+
+
+def get_group_name(root, snap, subvols, group_base='Output',
+                   ndigits=3, dir_base='iz',verbose=False):
     """
     Get the name of the hdf5 group to be read for a given snapshot.
     
@@ -100,6 +158,8 @@ def get_group_name(root, snap, group_base='Output',ndigits=3, dir_base='iz'):
         Root to higher level directories
     snap : str or int
         The snapshot number to find (the number after 'iz')
+    subvols : list of int
+        List of subvolumes
     group_base : str
         The base for the group name
     ndigits : int
@@ -112,23 +172,24 @@ def get_group_name(root, snap, group_base='Output',ndigits=3, dir_base='iz'):
     group_name : str
     """
     group_name = group_base
-    
-    # Find output snapshots
-    vol_dirs = glob(root+'*')
-    if len(vol_dirs) < 1:
-        print(f'STOP: No adequate directories with root {root}')
-        return None
-    zroot = os.path.join(vol_dirs[0],dir_base)
-    z_dirs = glob(zroot+'*')
-    if len(z_dirs) < 1:
-        print(f'STOP: No adequate directories with root {zroot}')
-        return None
-    zz = [int(os.path.basename(d).replace(dir_base, '')) for d in z_dirs]
-    zz.sort(reverse=True)
-
+########################
     # Get the index of the snapshot as n-digits characters
     oonum = zz.index(int(snap)) + 1
     group_name += f'{oonum:0{ndigits}d}'
+    return group_name
+###########################
+
+    # Get and validate redshift directories across subvolumes
+    zz = get_zz_subvols(root, subvols, dir_base=dir_base)
+
+    # Get the index of the snapshot
+    try:
+        oonum = zz.index(int(snap)) + 1
+    except ValueError:
+        print(f'STOP: Snapshot {snap} not found in available snapshots: {zz}')
+        sys.exit(1)
+
+    group_name = group_base + f'{oonum:0{ndigits}d}'
     return group_name
 
 #---------------hdf5 files-----------------------------------------
@@ -177,7 +238,7 @@ def check_h5_structure(infile, datasets, group=None, verbose=True):
             hf = open_hdf5_group(hdf_file, group)
             if hf is None:
                 if verbose:
-                    print(f'WARNING: Group (pattern) {group} not found in {infile}')
+                    print(f'WARNING: Group {group} not found in {infile}')
                 return False
 
             structure_ok = set(datasets).issubset(list(hf.keys()))

@@ -9,18 +9,18 @@ from src.generate_test_files import generate_test_files
 
 verbose = True
 
-validate_files = False  # Check the structure of files
-generate_files = True # Generate input for generate_nebular_emission
+validate_files = True  # Check the structure of files
+generate_files = False # Generate input for generate_nebular_emission
 generate_testing_files = False # Generate reduced input for testing
 
 #-------------------------------------------------------------
-simtype = 'GP20SU' # Set the file configuration adequately 
-snap = 96
-subvols = list(range(2))
+#simtype = 'GP20SU' # Set the file configuration adequately 
+#snap = 96
+#subvols = list(range(2))
 #-------------------------------------------------------------
-#simtype = 'GP20UNIT1Gpc' # Set the file configuration adequately 
-#snap = 128
-#subvols = list(range(1))
+simtype = 'GP20UNIT1Gpc' # Set the file configuration adequately 
+snap = 108
+subvols = [34,35] #list(range(1))  #list(range(1:63))
 #-------------------------------------------------------------
 #simtype = 'GP20cosma' # Set the file configuration adequately 
 #snap = 39 #61
@@ -35,7 +35,7 @@ percentage = 10 # Percentage for generating testing file
 subfiles = 2     # Number of testing files
     
 # Get the configuration
-config = get_config(simtype,snap,laptop=laptop)
+config = get_config(simtype,snap,subvols,laptop=laptop)
 
 # Validate that files have the expected structure
 if validate_files:
