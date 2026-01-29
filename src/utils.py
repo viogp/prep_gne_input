@@ -171,24 +171,15 @@ def get_group_name(root, snap, subvols, group_base='Output',
     -------
     group_name : str
     """
-    group_name = group_base
-########################
-    # Get the index of the snapshot as n-digits characters
-    oonum = zz.index(int(snap)) + 1
-    group_name += f'{oonum:0{ndigits}d}'
-    return group_name
-###########################
-
     # Get and validate redshift directories across subvolumes
     zz = get_zz_subvols(root, subvols, dir_base=dir_base)
-
-    # Get the index of the snapshot
-    try:
-        oonum = zz.index(int(snap)) + 1
-    except ValueError:
+    print(zz,snap); exit()
+    if snap not in zz:
         print(f'STOP: Snapshot {snap} not found in available snapshots: {zz}')
         sys.exit(1)
 
+    # Get the index of the snapshot as n-digits characters
+    oonum = zz.index(int(snap)) + 1
     group_name = group_base + f'{oonum:0{ndigits}d}'
     return group_name
 
