@@ -6,14 +6,14 @@ import numpy as np
 
 sims = ['GP20cosma','GP20SU','GP20UNIT1Gpc'] 
 
-def get_config(simtype, snap, subvols, laptop=False, verbose=False):
+def get_config(sim, snap, subvols, laptop=False, verbose=False):
     """
     Get general configuration
     
     Parameters
     ----------
-    simtype : str
-        Simulation type (must be in sims list)
+    sim : str
+        Simulation type
     snap : integer
         Snapshot number
     subvols : list of integers
@@ -28,7 +28,7 @@ def get_config(simtype, snap, subvols, laptop=False, verbose=False):
     config: dict
         Configuration dictionary
     """
-
+    simtype = sim
     if simtype not in sims:
         raise ValueError(f"Simulation type '{simtype}' not supported. Available types: {sims}")
     

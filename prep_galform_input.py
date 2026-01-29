@@ -14,15 +14,15 @@ generate_files = False # Generate input for generate_nebular_emission
 generate_testing_files = False # Generate reduced input for testing
 
 #-------------------------------------------------------------
-#simtype = 'GP20SU' # Set the file configuration adequately 
+#sim = 'GP20SU_1' #'GP20SU_2'
 #snap = 96
 #subvols = list(range(2))
 #-------------------------------------------------------------
-simtype = 'GP20UNIT1Gpc' # Set the file configuration adequately 
+sim = 'GP20UNIT1Gpc_fnl0' #'GP20UNIT1Gpc_fnl100' 
 snap = 108
 subvols = [34,35] #list(range(1,63)) #list(range(1))
 #-------------------------------------------------------------
-#simtype = 'GP20cosma' # Set the file configuration adequately 
+#sim = 'GP20cosma' # Set the file configuration adequately 
 #snap = 39 #61
 #subvols = list(range(64))
 #-------------------------------------------------------------
@@ -35,7 +35,7 @@ percentage = 10 # Percentage for generating testing file
 subfiles = 2     # Number of testing files
     
 # Get the configuration
-config = get_config(simtype,snap,subvols,laptop=laptop)
+config = get_config(sim,snap,subvols,laptop=laptop)
 
 # Validate that files have the expected structure
 if validate_files:
