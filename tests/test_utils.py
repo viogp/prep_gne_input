@@ -127,7 +127,47 @@ class TestPredict(unittest.TestCase):
             u.get_zz_subvols(os.path.join(self.test_dir, 'mismatchvol'), [0, 1], verbose=vb)
         self.assertEqual(cm.exception.code, 1)
         
+
+    def test_get_group_name(self):
+        # Create subdirectories to simulate the volume/redshift structure
+        vol_dir = os.path.join(self.test_dir, 'ivol0')
+        os.makedirs(vol_dir, exist_ok=True)
         
+        # Create iz directories with various snapshot numbers
+        for iz in [128, 96, 78, 50]:
+            os.makedirs(os.path.join(vol_dir, f'iz{iz}'), exist_ok=True)
+        
+        # Test: sorted descending is [128, 96, 78, 50]
+        # snap=128 should be index 1 -> 'Output001'
+        root = os.path.join(self.test_dir, 'ivol')
+        result = u.get_group_name(root, 128, subvols=[0])
+        self.assertEqual(result, 'Output001')
+        
+        # snap=96 should be index 2 -> 'Output002'
+        result = u.get_group_name(root, 96, subvols=[0])
+        self.assertEqual(result, 'Output002')
+        
+        # snap=50 should be index 4 -> 'Output004'
+        result = u.get_group_name(root, '50', subvols=[0])  # Test with string input
+        self.assertEqual(result, 'Output004')
+        
+        # Test custom group_base and ndigits
+        result = u.get_group_name(root, 78, subvols=[0], group_base='Snap', ndigits=5)
+        self.assertEqual(result, 'Snap00003')
+        
+        # Test with non-existent root -> sys.exit(1)
+        with self.assertRaises(SystemExit) as cm:
+            u.get_group_name('/nonexistent/path/', 128, subvols=[0])
+        self.assertEqual(cm.exception.code, 1)
+        
+        # Test with root that has no iz directories -> sys.exit(1)
+        empty_vol = os.path.join(self.test_dir, 'empty_vol0')
+        os.makedirs(empty_vol, exist_ok=True)
+        with self.assertRaises(SystemExit) as cm:
+            u.get_group_name(os.path.join(self.test_dir, 'empty_vol'), 128, subvols=[0])
+        self.assertEqual(cm.exception.code, 1)
+
+    
     def test_check_h5_structure(self):
         vb = False
         ss = u.check_h5_structure('notfile',['type'],verbose=vb)
