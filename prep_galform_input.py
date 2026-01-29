@@ -20,7 +20,7 @@ generate_testing_files = False # Generate reduced input for testing
 #-------------------------------------------------------------
 simtype = 'GP20UNIT1Gpc' # Set the file configuration adequately 
 snap = 108
-subvols = [34,35] #list(range(1))  #list(range(1:63))
+subvols = [34,35] #list(range(1,63)) #list(range(1))
 #-------------------------------------------------------------
 #simtype = 'GP20cosma' # Set the file configuration adequately 
 #snap = 39 #61

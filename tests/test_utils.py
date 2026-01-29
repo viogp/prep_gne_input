@@ -126,7 +126,16 @@ class TestPredict(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm:
             u.get_zz_subvols(os.path.join(self.test_dir, 'mismatchvol'), [0, 1], verbose=vb)
         self.assertEqual(cm.exception.code, 1)
+
+        # Test: dir_base=None (directories are just numbers)
+        vol_numonly = os.path.join(self.test_dir, 'numvol0')
+        os.makedirs(vol_numonly, exist_ok=True)
+        for num in [5, 10, 15, 20]:
+            os.makedirs(os.path.join(vol_numonly, str(num)), exist_ok=True)
         
+        root_numonly = os.path.join(self.test_dir, 'numvol')
+        result = u.get_zz_subvols(root_numonly, [0], dir_base=None, verbose=vb)
+        self.assertEqual(result, [20, 15, 10, 5])
 
     def test_get_group_name(self):
         # Create subdirectories to simulate the volume/redshift structure

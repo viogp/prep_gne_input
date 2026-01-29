@@ -116,7 +116,10 @@ def get_zz_subvols(root, subvols, dir_base='iz',verbose=False):
             continue
 
         # Find redshift subdirectories
-        zroot = os.path.join(vol_dir, dir_base)
+        zroot = vol_dir.rstrip('/') + '/'
+        if dir_base is not None:
+            zroot = os.path.join(vol_dir, dir_base)
+
         z_dirs = glob(zroot + '*')
         if len(z_dirs) < 1:
             if verbose:
@@ -124,7 +127,10 @@ def get_zz_subvols(root, subvols, dir_base='iz',verbose=False):
             continue
 
         # Find output snapshots
-        zz = [int(os.path.basename(d).replace(dir_base, '')) for d in z_dirs]
+        if dir_base is None:
+            zz = [int(os.path.basename(d)) for d in z_dirs]
+        else:
+            zz = [int(os.path.basename(d).replace(dir_base, '')) for d in z_dirs]
         zz.sort(reverse=True)
 
         # Check that all subvolumes have the same snapshots
