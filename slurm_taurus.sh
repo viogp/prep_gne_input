@@ -11,14 +11,14 @@ echo "#!/bin/sh
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
 #SBATCH --job-name=$bn
-#SBATCH --error=$bn.err
-#SBATCH --output=$bn.out
+#SBATCH --error=output/$bn.err
+#SBATCH --output=output/$bn.out
 ##SBATCH --mem=600000
 #SBATCH --partition=all
 #SBATCH --time=30-00:00:00
 #
 export OMP_NUM_THREADS=16
-srun python prep_galform_input.py" > submit_$bn
+srun python prep_galform_input.py" > output/submit_$bn
 
 # Enviar el trabajo
-sbatch submit_$bn
+sbatch output/submit_$bn

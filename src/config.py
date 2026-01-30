@@ -13,7 +13,8 @@ def get_config(sim, snap, subvols, laptop=False, verbose=False):
     Parameters
     ----------
     sim : str
-        Simulation type
+        Simulation type, which can include a cosmological variant 
+        after an underscore, e.g. 'GP20UNIT1Gpc_fnl0'.
     snap : integer
         Snapshot number
     subvols : list of integers
@@ -28,20 +29,28 @@ def get_config(sim, snap, subvols, laptop=False, verbose=False):
     config: dict
         Configuration dictionary
     """
-    simtype = sim
+    if '_' in sim:
+        simtype, cosmo_var = sim.split('_', 1)
+    else:
+        simtype = sim
+        cosmo_var = None
     if simtype not in sims:
         raise ValueError(f"Simulation type '{simtype}' not supported. Available types: {sims}")
     
     if verbose:
-        print(f"Getting configuration for simulation type: {simtype}")
+        if cosmo_var is None:
+            print(f"Getting configuration for {simtype}, snap = {snap}")
+        else:
+            print(f"Getting configuration for {simtype} ({cosmo_var}), snap = {snap}")
 
     function_name = f'get_{simtype}_config'
     config_function = globals()[function_name]
-    config = config_function(snap, subvols, laptop=laptop, verbose=verbose)
+    config = config_function(snap, subvols, cosmo_var=cosmo_var,
+                             laptop=laptop, verbose=verbose)
     return config
 
 
-def get_GP20cosma_config(snap, subvols, laptop=False, verbose=False):
+def get_GP20cosma_config(snap, subvols, cosmo_var=None, laptop=False, verbose=False):
     """
     Get configuration for GP20 runs
     
@@ -51,6 +60,8 @@ def get_GP20cosma_config(snap, subvols, laptop=False, verbose=False):
         Snapshot number
     subvols : list of integers
         List of subvolumes to be considered
+    cosmo_var : str, optional
+        Cosmological variant
     laptop : bool, optional
         If True, use local test configuration
     verbose : bool, optional
@@ -147,7 +158,7 @@ def get_GP20cosma_config(snap, subvols, laptop=False, verbose=False):
     return config
 
 
-def get_GP20SU_config(snap, subvols, laptop=False, verbose=False):
+def get_GP20SU_config(snap, subvols, cosmo_var='1', laptop=False, verbose=False):
     """
     Get configuration for GP20 runs
     
@@ -157,6 +168,8 @@ def get_GP20SU_config(snap, subvols, laptop=False, verbose=False):
         Snapshot number
     subvols : list of integers
         List of subvolumes to be considered
+    cosmo_var : str, optional
+        Cosmological variant
     laptop : bool, optional
         If True, use local test configuration
     verbose : bool, optional
@@ -167,18 +180,29 @@ def get_GP20SU_config(snap, subvols, laptop=False, verbose=False):
     config: dict
         Configuration dictionary
     """
-    # Path to files
     ln_As = 3.064
-    # SU1 ----------------------------
-    outpath = '/home2/vgonzalez/Data/Galform/SU1/'
-    path = '/data2/users/olivia/galform_output/SU1/SU1_z_tests/'
-    #path = '/data2/users/olivia/galform_output/SU1/SU1_250MPC_np_corrected/'
-    ## SU2 ----------------------------
-    #ln_As = ln_As + np.log(1.05)
-    #outpath = '/home2/vgonzalez/Data/Galform/SU2/'
-    #path = '/data2/users/olivia/galform_output/SU2/SU2_z_tests/'
-    ##path = '/data2/users/olivia/galform_output/SU2/SU2_250MPC_np_corrected/'
-    # ----------------------------
+    
+    # Path to files
+    if cosmo_var is None or cosmo_var == '1': # SU1
+        outpath = '/home2/vgonzalez/Data/Galform/SU1/'
+        dirs = ['/data2/users/olivia/galform_output/SU1/SU1_250MPC_np_corrected/',
+                '/data2/users/olivia/galform_output/SU1/SU1_z_tests/']
+        if snap in [109, 104, 98, 90, 87]:
+            path = dirs[0]
+        elif snap in [128, 96, 78]:
+            path = dirs[1]
+        else:
+            raise ValueError(f"Check that the snapshot {snap} is",
+                             f" within the directories {dirs}")
+    else: # SU2
+        ln_As = ln_As + np.log(1.05)
+        outpath = '/home2/vgonzalez/Data/Galform/SU2/'
+        dirs = ['/data2/users/olivia/galform_output/SU2/SU2_250MPC_np_corrected/']
+        if snap in [109, 104, 98, 90, 87]:
+            path = dirs[0]
+        else:
+            raise ValueError(f"Check that the snapshot {snap} is",
+                             f" within the directories {dirs}")
     ending = 'iz'+str(snap)
     root = path+'ivol'
     outroot = outpath+ending+'/ivol'
@@ -272,7 +296,8 @@ def get_GP20SU_config(snap, subvols, laptop=False, verbose=False):
 
 
 
-def get_GP20UNIT1Gpc_config(snap, subvols, laptop=False, verbose=False):
+def get_GP20UNIT1Gpc_config(snap, subvols, cosmo_var='fnl0',
+                            laptop=False, verbose=False):
     """
     Get configuration for GP20 runs on the UNIT 1 Gpc/h simulation
     
@@ -282,6 +307,8 @@ def get_GP20UNIT1Gpc_config(snap, subvols, laptop=False, verbose=False):
         Snapshot number
     subvols : list of integers
         List of subvolumes to be considered
+    cosmo_var : str, optional
+        Cosmological variant
     laptop : bool, optional
         If True, use local test configuration
     verbose : bool, optional
@@ -292,17 +319,25 @@ def get_GP20UNIT1Gpc_config(snap, subvols, laptop=False, verbose=False):
     config: dict
         Configuration dictionary
     """
-    # Path to files
-    # ----------------------------
     fnl = 0
-    outpath = '/home2/vgonzalez/Data/Galform/UNIT1GPC_fnl0/'
-    path = '/data2/users/olivia/galform_output/UNIT_PNG/LRG_1_and_3/'
-    #path = '/data2/users/olivia/galform_output/UNIT_PNG/UNIT_1GPC/'
-    # ----------------------------
-    fnl = 100
-    outpath = '/home2/vgonzalez/Data/Galform/UNIT1GPC_fnl100/'
-    path = '/data2/users/olivia/galform_output/UNIT_PNG100/UNITPNG100_1GPC/'
-    # ----------------------------
+    
+    # Path to files
+    if cosmo_var is None or cosmo_var == 'fnl0':
+        outpath = '/home2/vgonzalez/Data/Galform/UNIT1GPC_fnl0/'
+        dirs = ['/data2/users/olivia/galform_output/UNIT_PNG/LRG_1_and_3/',
+                '/data2/users/olivia/galform_output/UNIT_PNG/UNIT_1GPC/']
+        if snap in [98,109]:
+            path = dirs[0]
+        elif snap in [87,90,104,128,109,105,103,101,98,92,84,81,79,77]:
+            path = dirs[1]
+        else:
+            raise ValueError(f"Check that the snapshot {snap} is",
+                             f" within the directories {dirs}")
+    else:
+        fnl = 100
+        outpath = '/home2/vgonzalez/Data/Galform/UNIT1GPC_fnl100/'
+        path = '/data2/users/olivia/galform_output/UNIT_PNG100/UNITPNG100_1GPC/'
+        
     ending = 'iz'+str(snap)
     root = path+'ivol'
     outroot = outpath+ending+'/ivol'

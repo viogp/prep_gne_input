@@ -19,7 +19,7 @@ generate_testing_files = False # Generate reduced input for testing
 #subvols = list(range(2))
 #-------------------------------------------------------------
 sim = 'GP20UNIT1Gpc_fnl0' #'GP20UNIT1Gpc_fnl100' 
-snap = 108
+snap = 109
 subvols = [34,35] #list(range(1,63)) #list(range(1))
 #-------------------------------------------------------------
 #sim = 'GP20cosma' # Set the file configuration adequately 
@@ -35,7 +35,7 @@ percentage = 10 # Percentage for generating testing file
 subfiles = 2     # Number of testing files
     
 # Get the configuration
-config = get_config(sim,snap,subvols,laptop=laptop)
+config = get_config(sim,snap,subvols,laptop=laptop,verbose=verbose)
 
 # Validate that files have the expected structure
 if validate_files:
