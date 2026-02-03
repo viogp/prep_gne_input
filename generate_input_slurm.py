@@ -1,9 +1,11 @@
-''' Validate a set of simulations'''
-from src.prep_input import prep_input
+''' Generate and submit SLURM jobs for preparing Galform input '''
+from src.slurm_utils import create_slurm_script, submit_slurm_job
 
 verbose = True
 nvol = 2
+submit_jobs = True  # False to only generate scripts
 
+# Test simulations
 test_taurus_sims_GP20 = [
     ('GP20SU_1', [87, 128], list(range(nvol))),
 ]
@@ -23,10 +25,25 @@ cosma_sims_GP20 = [
     ('GP20cosma', [39, 61], list(range(64)))
 ]
 
-# Loop over the relevant simulations
+# Select which simulations to process
 #simulations = taurus_sims_GP20
 simulations = test_taurus_sims_GP20
+hpc = 'taurus'
+
+job_count = 0
 for sim, snaps, subvols in simulations:
     for snap in snaps:
-        prep_input(sim, snap, subvols, validate_files=False,
-                   generate_files=True,verbose=verbose)
+        # Generate SLURM script
+        script_path, job_name = create_slurm_script(
+            hpc, sim, snap, subvols, verbose=verbose
+        )
+        if verbose: 
+            print(f'  Created script: {script_path}')
+            
+        # Submit the job
+        if submit_jobs:
+            submit_slurm_job(script_path, job_name)
+            job_count += 1
+
+if submit_jobs and verbose:
+    print(f'Total jobs submitted: {job_count}')
