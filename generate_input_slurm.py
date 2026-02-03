@@ -2,20 +2,16 @@
 import src.slurm_utils as u
 
 verbose = True
-nvol = 2
+nvol = 64
 
-submit_jobs = False  # False for only generating the scripts
-check_all_jobs = False
-clean = True
-
-# Test simulations
-test_taurus_sims_GP20 = [
-    ('GP20SU_1', [87, 128], list(range(nvol))),
-]
+submit_jobs = True  # False for only generating the scripts
+check_all_jobs = True
+clean = False
 
 # Galform in taurus
 taurus_sims_GP20 = [
-    ('GP20SU_1', [109, 104, 98, 90, 87, 128, 96, 78], list(range(nvol))),
+    #('GP20SU_1', [109, 104, 98, 90, 87, 128, 96, 78], list(range(nvol))),
+    ('GP20SU_1', [109, 104, 98, 90, 96, 78], list(range(nvol))),
     ('GP20SU_2', [109, 104, 98, 90, 87], list(range(nvol))),
     ('GP20UNIT1Gpc_fnl0', [98, 109, 87, 90, 104], [0] + list(range(3, nvol))),
     ('GP20UNIT1Gpc_fnl0', [128,109,105,104,103,101,98,92,90,87,84,81,79,77], [1,2]),
@@ -29,8 +25,7 @@ cosma_sims_GP20 = [
 ]
 
 # Select which simulations to process
-#simulations = taurus_sims_GP20
-simulations = test_taurus_sims_GP20
+simulations = taurus_sims_GP20
 hpc = 'taurus'
 
 # Submit, check or clean
