@@ -218,3 +218,123 @@ def check_all_jobs(simulations, outdir=None, success_string='SUCCESS', verbose=T
         print(f'  Not found:  {len(results["not_found"])}')
     
     return results
+
+
+def clean_job_files(job_name=None, outdir=None, only_show=True, verbose=True):
+    """
+    Remove .out, .err, and .sh files for a specific job or all jobs.
+
+    Parameters
+    ----------
+    job_name : string or None
+        Name of the job to clean. If None, clean all job files in outdir.
+    outdir : string
+        Directory containing output files, default is 'output/'
+    only_show : bool
+        If True, only list files that would be deleted without removing them.
+        Set to False to actually delete files.
+    verbose : bool
+        If True, print information about deleted files
+
+    Returns
+    -------
+    deleted_files : list
+        List of files that were deleted (or would be deleted if only_show=True)
+    """
+    if outdir is None:
+        output_dir = 'output'
+    else:
+        output_dir = outdir
+    
+    if not os.path.exists(output_dir):
+        if verbose:
+            print(f'Directory {output_dir} does not exist')
+        return []
+    
+    deleted_files = []
+    
+    if job_name is not None:
+        # Clean files for a specific job
+        extensions = ['.out', '.err']
+        for ext in extensions:
+            filepath = os.path.join(output_dir, f'{job_name}{ext}')
+            if os.path.exists(filepath):
+                deleted_files.append(filepath)
+                if not only_show:
+                    os.remove(filepath)
+        
+        # Also remove the submit script
+        script_path = os.path.join(output_dir, f'submit_{job_name}.sh')
+        if os.path.exists(script_path):
+            deleted_files.append(script_path)
+            if not only_show:
+                os.remove(script_path)
+    else:
+        # Clean all .out, .err, and .sh files in the directory
+        for filename in os.listdir(output_dir):
+            if filename.endswith('.out') or filename.endswith('.err') or filename.endswith('.sh'):
+                filepath = os.path.join(output_dir, filename)
+                deleted_files.append(filepath)
+                if not only_show:
+                    os.remove(filepath)
+    
+    # Print results
+    if verbose:
+        action = 'Would delete' if only_show else 'Deleted'
+        if deleted_files:
+            print(f'{action} {len(deleted_files)} file(s):')
+            for f in deleted_files:
+                print(f'  {f}')
+        else:
+            print('No files to delete')
+        
+        if only_show and deleted_files:
+            print('\n(Set only_show=False to delete.)')
+    
+    return deleted_files
+
+
+def clean_all_jobs(simulations, outdir=None, only_show=True, verbose=True):
+    """
+    Remove .out, .err, and .sh files for all jobs in a simulation list.
+
+    Parameters
+    ----------
+    simulations : list of tuples
+        List of (sim, snaps, subvols) tuples
+    outdir : string
+        Directory containing output files, default is 'output/'
+    only_show : bool
+        If True, only list files that would be deleted without removing them.
+        Set to False to actually delete files.
+    verbose : bool
+        If True, print information about deleted files
+
+    Returns
+    -------
+    deleted_files : list
+        List of all files that were deleted (or would be deleted if only_show=True)
+    """
+    all_deleted = []
+    
+    for sim, snaps, subvols in simulations:
+        for snap in snaps:
+            job_name = generate_job_name(sim, snap, subvols)
+            deleted = clean_job_files(job_name, outdir=outdir,
+                                      only_show=only_show, verbose=False)
+            all_deleted.extend(deleted)
+    
+    # Print summary
+    if verbose:
+        action = 'Would delete' if only_show else 'Deleted'
+        if all_deleted:
+            print(f'{action} {len(all_deleted)} file(s):')
+            for f in all_deleted:
+                print(f'  {f}')
+        else:
+            print('No files to delete')
+        
+        if only_show and all_deleted:
+            print('\n(Set only_show=False to delete.)')
+    
+    return all_deleted

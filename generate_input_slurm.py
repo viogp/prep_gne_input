@@ -1,12 +1,12 @@
 ''' Generate and submit SLURM jobs for preparing Galform input '''
-from src.slurm_utils import check_all_jobs, create_slurm_script, submit_slurm_job
+import src.slurm_utils as u
 
 verbose = True
 nvol = 2
 
 submit_jobs = False  # False for only generating the scripts
-check_all_jobs = True
-clean = False
+check_all_jobs = False
+clean = True
 
 # Test simulations
 test_taurus_sims_GP20 = [
@@ -35,22 +35,22 @@ hpc = 'taurus'
 
 # Submit, check or clean
 if clean:
-    print('clean')
+    u.clean_all_jobs(test_taurus_sims_GP20, only_show=True)
 elif check_all_jobs:
-    results = check_all_jobs(simulations,verbose=True)
+    results = u.check_all_jobs(simulations,verbose=True)
 else:            
     job_count = 0
     for sim, snaps, subvols in simulations:
         for snap in snaps:
             # Generate SLURM script
-            script_path, job_name= create_slurm_script(
+            script_path, job_name= u.create_slurm_script(
                 hpc, sim, snap, subvols, verbose=verbose)
             if verbose: 
                 print(f'  Created script: {script_path}')
                 
             # Submit the job
             if submit_jobs:
-                submit_slurm_job(script_path, job_name)
+                u.submit_slurm_job(script_path, job_name)
                 job_count += 1
     
     if submit_jobs and verbose:
