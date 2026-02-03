@@ -1,5 +1,5 @@
 ''' Generate and submit SLURM jobs for preparing Galform input '''
-from src.slurm_utils import create_slurm_script, submit_slurm_job
+from src.slurm_utils import check_all_jobs, create_slurm_script, submit_slurm_job
 
 verbose = True
 nvol = 2
