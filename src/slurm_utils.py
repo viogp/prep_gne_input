@@ -74,8 +74,8 @@ def create_slurm_script(hpc, sim, snap, subvols,
     return script_path, job_name
 
 
-def submit_slurm_job(script_path, job_name):
-    """Submit a SLURM job and return the job ID."""
+def submit_slurm_job(script_path,job_name):
+    """Submit a SLURM job and return the job ID."""    
     try:
         process = subprocess.Popen(
             ['sbatch', script_path],

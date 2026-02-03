@@ -3,7 +3,10 @@ from src.slurm_utils import create_slurm_script, submit_slurm_job
 
 verbose = True
 nvol = 2
-submit_jobs = True  # False to only generate scripts
+
+submit_jobs = True  # False for only generating the scripts
+check_job_output = True
+clean = False
 
 # Test simulations
 test_taurus_sims_GP20 = [
@@ -34,9 +37,8 @@ job_count = 0
 for sim, snaps, subvols in simulations:
     for snap in snaps:
         # Generate SLURM script
-        script_path, job_name = create_slurm_script(
-            hpc, sim, snap, subvols, verbose=verbose
-        )
+        script_path, job_name= create_slurm_script(
+            hpc, sim, snap, subvols, verbose=verbose)
         if verbose: 
             print(f'  Created script: {script_path}')
             
@@ -45,5 +47,10 @@ for sim, snaps, subvols in simulations:
             submit_slurm_job(script_path, job_name)
             job_count += 1
 
+        if check_job_output:
+            
+        if clean:
+            
+            
 if submit_jobs and verbose:
     print(f'Total jobs submitted: {job_count}')
