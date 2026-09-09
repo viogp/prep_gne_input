@@ -249,3 +249,4 @@ def check_h5_structure(infile, datasets, group=None, verbose=True):
         structure_ok = False
         
     return structure_ok
+

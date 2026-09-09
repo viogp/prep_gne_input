@@ -192,6 +192,7 @@ class TestPredict(unittest.TestCase):
         ss = u.check_h5_structure(self.hf5file,['type'],
                                    group='data',verbose=vb)
         self.assertEqual(True,ss)
+
         
 if __name__ == '__main__':
     unittest.main()

@@ -254,3 +254,4 @@ def generate_input_file(config, ivol, verbose=False):
                     
     print(f' * Generated file: {outfile}')
     return True
+
