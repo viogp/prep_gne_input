@@ -98,6 +98,7 @@ class TestLuminosityRatioCalculation(unittest.TestCase):
         return {
             'root': os.path.join(self.test_dir, 'input', 'ivol'),
             'outroot': os.path.join(self.test_dir, 'output', 'ivol'),
+            'ending': '',
             'h0': 0.7,
             'omega0': 0.3,
             'omegab': 0.05,
@@ -290,6 +291,7 @@ class TestLuminosityRatioEdgeCases(unittest.TestCase):
         return {
             'root': os.path.join(self.test_dir, 'input', ''),
             'outroot': os.path.join(self.test_dir, 'output', ''),
+            'ending': '',
             'h0': 0.7,
             'omega0': 0.3,
             'omegab': 0.05,
@@ -404,6 +406,109 @@ class TestLuminosityRatioEdgeCases(unittest.TestCase):
             expected = expected_full[gal_index]
             np.testing.assert_allclose(ratio, expected, rtol=1e-10,
                                       err_msg="Ratios should match expected values")
+
+
+
+class TestMStarBurstCalculation(unittest.TestCase):
+    """Test cases for MStarBurst calculation (Shark specific)"""
+    
+    def setUp(self):
+        self.test_dir = tempfile.mkdtemp()
+        self.input_dir = os.path.join(self.test_dir, 'input', '0')
+        self.output_dir = os.path.join(self.test_dir, 'output', '0')
+        os.makedirs(self.input_dir)
+        self.n_galaxies = 100
+        
+    def tearDown(self):
+        shutil.rmtree(self.test_dir)
+        
+    def _create_config(self, datasets):
+        """Create config with specific datasets"""
+        return {
+            'root': os.path.join(self.test_dir, 'input', ''),
+            'outroot': os.path.join(self.test_dir, 'output', ''),
+            'ending': '',
+            'h0': 0.7,
+            'omega0': 0.3,
+            'omegab': 0.05,
+            'lambda0': 0.7,
+            'boxside': 125.0,
+            'mp': 1e9,
+            'snap': 39,
+            'mcold_disc': 'mcold', 
+            'mcold_z_disc': 'cold_metal', 
+            'mcold_burst': 'mcold_burst', 
+            'mcold_z_burst': 'metals_burst', 
+            'line_prefix': 'L_tot_',
+            'line_suffix_ext': '_ext',
+            'lines': [],
+            'selection': {
+                'galaxies.hdf5': {
+                    'group': 'Output001',
+                    'datasets': ['mhhalo'],
+                    'units': ['Msun/h'],
+                    'low_limits': [0],
+                    'high_limits': [None]
+                }
+            },
+            'file_props': {
+                'galaxies.hdf5': {
+                    'group': 'Output001',
+                    'datasets': datasets, 
+                    'units': ['Msun/h'] * len(datasets)
+                }
+            }
+        }
+
+    def _create_input_file(self, data_dict):
+        """Create galaxies.hdf5"""
+        gal_file = os.path.join(self.input_dir, 'galaxies.hdf5')
+        with h5py.File(gal_file, 'w') as f:
+            grp = f.create_group('Output001')
+            grp.create_dataset('mhhalo', data=np.ones(self.n_galaxies) * 1e12)
+            # Add dummy required datasets
+            grp.create_dataset('redshift', data=0.5)
+            # Add requested datasets
+            for name, data in data_dict.items():
+                grp.create_dataset(name, data=data)
+
+    def test_mstar_burst_shark_summation(self):
+        """Test that MStarBurst is calculated as sum of components when main field is missing (Shark case)"""
+        # Create data
+        disk = np.random.uniform(1e8, 1e9, self.n_galaxies)
+        mergers = np.random.uniform(1e8, 1e9, self.n_galaxies)
+        
+        data = {
+            'mstars_burst_diskinstabilities': disk,
+            'mstars_burst_mergers': mergers,
+            # 'mstars_burst': missing
+            # Dummy datasets to prevent errors
+            'mcold': np.zeros(self.n_galaxies),
+            'cold_metal': np.zeros(self.n_galaxies),
+            'mcold_burst': np.zeros(self.n_galaxies),
+            'metals_burst': np.zeros(self.n_galaxies),
+        }
+        
+        self._create_input_file(data)
+        
+        datasets = ['mstars_burst_diskinstabilities', 'mstars_burst_mergers', 
+                   'mcold', 'cold_metal', 'mcold_burst', 'metals_burst', 'redshift']
+        config = self._create_config(datasets)
+        
+        # Run
+        result = generate_input_file(config, ivol=0, verbose=False)
+        self.assertTrue(result)
+        
+        outfile = os.path.join(self.test_dir, 'output', '0', 'gne_input.hdf5')
+        self.assertTrue(os.path.exists(outfile))
+        
+        with h5py.File(outfile, 'r') as f:
+            self.assertIn('mstars_burst', f['data'])
+            mstar_burst = f['data']['mstars_burst'][:]
+            
+            # Expect sum
+            expected = disk + mergers
+            np.testing.assert_allclose(mstar_burst, expected, rtol=1e-10)
 
 
 if __name__ == '__main__':

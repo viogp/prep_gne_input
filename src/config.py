@@ -3,8 +3,11 @@ Configuration of files to be read
 """
 import src.utils as u
 import numpy as np
+import os
 
-sims = ['GP20cosma','GP20SU','GP20UNIT1Gpc'] 
+
+sims = ['GP20cosma','GP20SU','GP20UNIT1Gpc', 'SharkSU', 'SharkUNIT1Gpc'] 
+
 
 def get_config(sim, snap, subvols, laptop=False, verbose=False):
     """
@@ -130,6 +133,7 @@ def get_GP20cosma_config(snap, subvols, cosmo_var=None, laptop=False, verbose=Fa
         'galaxies.hdf5': {
             'group': 'Output###',
             'datasets': ['redshift', 'index', 'type',
+                         'xgal', 'ygal', 'zgal',   
                          'vxgal', 'vygal', 'vzgal',
                          'rbulge', 'rcomb', 'rdisk', 'mhot', 'vbulge',
                          'mcold', 'mcold_burst', 'cold_metal', 'metals_burst',
@@ -137,6 +141,7 @@ def get_GP20cosma_config(snap, subvols, cosmo_var=None, laptop=False, verbose=Fa
                          'mstardot', 'mstardot_burst', 'mstardot_average',
                          'M_SMBH', 'SMBH_Mdot_hh', 'SMBH_Mdot_stb', 'SMBH_Spin'],
             'units': ['redshift', 'Host halo index', 'Gal. type (central=0)',
+                      'Mpc/h', 'Mpc/h', 'Mpc/h',
                       'km/s','km/s','km/s',
                       'Mpc/h', 'Mpc/h', 'Mpc/h', 'Msun/h', 'km/s',
                       'Msun/h', 'Msun/h', 'Msun/h', 'Msun/h',
@@ -197,9 +202,12 @@ def get_GP20SU_config(snap, subvols, cosmo_var='1', laptop=False, verbose=False)
     else: # SU2
         ln_As = ln_As + np.log(1.05)
         outpath = '/data21/users/vgonzalez/Data/Galform/SU2/'
-        dirs = ['/data2/users/olivia/galform_output/SU2/SU2_250MPC_np_corrected/']
+        dirs = ['/data2/users/olivia/galform_output/SU2/SU2_250MPC_np_corrected/',
+               '/data2/users/olivia/galform_output/SU2/SU2_z_tests/']
         if snap in [109, 104, 98, 90, 87]:
             path = dirs[0]
+        elif snap in [128, 96, 78]:
+            path = dirs[1]
         else:
             raise ValueError(f"Check that the snapshot {snap} is",
                              f" within the directories {dirs}")
@@ -262,6 +270,7 @@ def get_GP20SU_config(snap, subvols, cosmo_var='1', laptop=False, verbose=False)
         'galaxies.hdf5': {
             'group': group,
             'datasets': ['redshift', 'index', 'type',
+                         'xgal', 'ygal', 'zgal',   
                          'vxgal', 'vygal', 'vzgal',
                          'rbulge', 'rcomb', 'rdisk', 'mhot', 'vbulge',
                          'mcold', 'mcold_burst', 'cold_metal', 'metals_burst',
@@ -269,6 +278,7 @@ def get_GP20SU_config(snap, subvols, cosmo_var='1', laptop=False, verbose=False)
                          'mstardot', 'mstardot_burst', 'mstardot_average',
                          'M_SMBH', 'SMBH_Mdot_hh', 'SMBH_Mdot_stb', 'SMBH_Spin'],
             'units': ['redshift', 'Host halo index', 'Gal. type (central=0)',
+                      'Mpc/h', 'Mpc/h', 'Mpc/h',
                       'km/s','km/s','km/s',
                       'Mpc/h', 'Mpc/h', 'Mpc/h', 'Msun/h', 'km/s',
                       'Msun/h', 'Msun/h', 'Msun/h', 'Msun/h',
@@ -397,6 +407,7 @@ def get_GP20UNIT1Gpc_config(snap, subvols, cosmo_var='fnl0',
         'galaxies.hdf5': {
             'group': group,
             'datasets': ['redshift', 'index', 'type',
+                         'xgal', 'ygal', 'zgal',   
                          'vxgal', 'vygal', 'vzgal',
                          'rbulge', 'rcomb', 'rdisk', 'mhot', 'vbulge',
                          'mcold', 'mcold_burst', 'cold_metal', 'metals_burst',
@@ -404,6 +415,7 @@ def get_GP20UNIT1Gpc_config(snap, subvols, cosmo_var='fnl0',
                          'mstardot', 'mstardot_burst', 'mstardot_average',
                          'M_SMBH', 'SMBH_Mdot_hh', 'SMBH_Mdot_stb', 'SMBH_Spin'],
             'units': ['redshift', 'Host halo index', 'Gal. type (central=0)',
+                      'Mpc/h', 'Mpc/h', 'Mpc/h',
                       'km/s','km/s','km/s',
                       'Mpc/h', 'Mpc/h', 'Mpc/h', 'Msun/h', 'km/s',
                       'Msun/h', 'Msun/h', 'Msun/h', 'Msun/h',
@@ -430,3 +442,291 @@ def get_GP20UNIT1Gpc_config(snap, subvols, cosmo_var='fnl0',
     return config
 
 
+def get_SharkSU_config(snap, subvols, cosmo_var='1', laptop=False, verbose=False):
+    """
+    Get configuration for Shark runs
+    
+    Parameters
+    ----------
+    snap : integer
+        Snapshot number
+    subvols : list of integers
+        List of subvolumes to be considered
+    cosmo_var : str, optional
+        Cosmological variant
+    laptop : bool, optional
+        If True, use local test configuration
+    verbose : bool, optional
+        If True, print further messages
+    
+    Returns
+    -------
+    config: dict
+        Configuration dictionary
+    """
+    path = None
+    output_path = None
+
+    if cosmo_var is None or cosmo_var=='1':
+        path = '/data2/users/olivia/shark_output/SU1_UNIT_250/N2048_L250_fid_np_corrected/'
+        output_path = '/home2/vgonzalez/Data/Shark/SU1/'
+    if cosmo_var=='2':
+        path = '/data2/users/olivia/shark_output/SU2_UNIT_250/N2048_L250_high_np_corrected/'
+        output_path = '/home2/vgonzalez/Data/Shark/SU2/'
+
+    if path is None or output_path is None:
+        raise ValueError(f"Label '{cosmo_var}' not supported. Available cosmo_var: 1, 2")
+    
+    if laptop:
+        path = "/home/santhiperbolico/sam/emlines/shark/SU1_UNIT_250"
+        output_path = path
+
+    outroot = os.path.join(output_path, "iz"+str(snap), "ivol")
+    
+
+    root = os.path.join(path, str(snap)) + "/"
+
+    boxside = 250 #Mpc/h (whole volume 500Mpc/h)
+    
+    config = {
+        # Paths
+        'root': root,
+        'outroot': outroot,
+        'ending': None,
+        
+        # Cosmology parameters
+        'h0': 0.6774,
+        'omega0': 0.3089,
+        'omegab': 0.0486,
+        'lambda0': 0.6911,
+        'boxside': boxside,
+        'mp': 1.558975e8,  # Msun/h
+
+        # Metallicity calculation parameters
+        'mcold_disc': 'mgas_disk',
+        'mcold_z_disc': 'mgas_metals_disk',
+        'mcold_burst': 'mgas_bulge', 
+        'mcold_z_burst': 'mgas_metals_bulge',
+    }
+    config['snap'] = snap
+    
+    # File selection criteria
+    config['selection'] = {
+        'galaxies.hdf5': {
+            'group': 'galaxies',
+            'datasets': [
+                'mvir_hosthalo', # mhhalo
+                ],
+            'units': ['Msun/h'],
+            'low_limits': [20 * config['mp']],
+            'high_limits': [None]
+        }
+    }
+     # Define the lines and luminosity names
+    config['lines'] = ['Halpha', 'Hbeta', 'NII6583', 'OII3727', 'OIII5007', 'SII6716']
+    config['line_prefix'] = 'L_tot_'
+    config['line_suffix_ext'] = '_ext'
+
+    # File redshift property
+    config['file_redshift'] = {
+        "file": "galaxies.hdf5",
+        "group": "run_info",
+        "dataset": "redshift",
+        "unit": "redshift"
+    }
+
+    # File properties to extract
+    config['file_props'] = {
+        'galaxies.hdf5': {
+            'group': 'galaxies',
+            'datasets': [
+                         'id_halo', # index
+                         'type',  # type
+                         'position_x', #xgal
+                         'position_y', #ygal
+                         'position_z', #zgal
+                         'velocity_x', #vxgal
+                         'velocity_y', #vygal
+                         'velocity_z', #vzgal
+                         'rgas_bulge', #rbulge
+                         'rgas_disk', #rdisk
+                         'mhot', #mhot
+                         'mgas_disk', #'mcold'
+                         'mgas_bulge', # 'mcold_burst'
+                         'mgas_metals_disk', # 'cold_metal'
+                         'mgas_metals_bulge', # 'metals_burst',
+                         'mstars_bulge',  # mstars_bulge
+                         'mstars_disk',  # mstars_disk
+                         'sfr_disk', # mstardot
+                         'sfr_burst', # mstardot_burst
+                         'm_bh', # 'M_SMBH'
+                         'bh_accretion_rate_hh', # 'SMBH_Mdot_hh'
+                         'bh_accretion_rate_sb', # 'SMBH_Mdot_stb'
+                         'bh_spin', # 'SMBH_Spin'
+                         'bolometric_luminosity_agn', # 'L_bol_agn'
+                         'mstars_burst_diskinstabilities',
+                         'mstars_burst_mergers'
+                         ],
+            'units': [
+                'Host halo index', 
+                'Gal. type (central=0)',
+                'Mpc/h', 'Mpc/h', 'Mpc/h',
+                'km/s','km/s','km/s',
+                'Mpc/h', 
+                'Mpc/h', 'Msun/h', 
+                'Msun/h', 'Msun/h', 'Msun/h', 'Msun/h', 'Msun/h', 
+                'Msun/h', 'Msun/h/Gyr', 
+                'Msun/h/Gyr', 
+                'Msun/h', 'Msun/h/Gyr', 'Msun/h/Gyr', 'Spin', '1e40 erg/s', 'Msun/h', 'Msun/h']
+        }
+    } 
+    return config
+
+
+def get_SharkUNIT1Gpc_config(snap, subvols, cosmo_var='fnl0', laptop=False, verbose=False):
+    """
+    Get configuration for Shark runs on the UNIT 1 Gpc/h simulation
+    
+    Parameters
+    ----------
+    snap : integer
+        Snapshot number
+    subvols : list of integers
+        List of subvolumes to be considered
+    cosmo_var : str, optional
+        Cosmological variant
+    laptop : bool, optional
+        If True, use local test configuration
+    verbose : bool, optional
+        If True, print further messages
+    
+    Returns
+    -------
+    config: dict
+        Configuration dictionary
+    """
+    path = None
+    output_path = None
+
+    # UNIT 1GPC
+    # fnl = 100
+
+
+    if cosmo_var is None or cosmo_var=='fnl0':
+        path = '/data2/users/olivia/shark_output/UNIT_1GPC/N4096_L1000_fid/'
+        output_path = '/home2/vgonzalez/Data/Shark/UNIT1GPC_fnl0/'
+        if laptop:
+            path = "/home/santhiperbolico/sam/emlines/shark/UNIT_1GPC/"
+            output_path = path
+
+    if cosmo_var=='fnl100':
+        path = '/data2/users/olivia/shark_output/UNIT_PNG100/N4096_L1000_fnl100/'
+        output_path = '/home2/vgonzalez/Data/Shark/UNIT1GPC_fnl100/'
+        if laptop:
+            path = "/home/santhiperbolico/sam/emlines/shark/UNIT_PNG100/"
+            output_path = path
+
+    if path is None or output_path is None:
+        raise ValueError(f"Cosmo Var '{cosmo_var}' not supported. Available cosmo_var: fnl0, fnl100")
+    
+
+    outroot = os.path.join(output_path, "iz"+str(snap), "ivol")
+    
+
+    root = os.path.join(path, str(snap)) + "/"
+
+    boxside = 1000 #Mpc/h (whole volume 500Mpc/h)
+    
+    config = {
+        # Paths
+        'root': root,
+        'outroot': outroot,
+        'ending': None,
+        
+        # Cosmology parameters
+        'h0': 0.6774,
+        'omega0': 0.3089,
+        'omegab': 0.0486,
+        'lambda0': 0.6911,
+        'boxside': boxside,
+        'mp':  1.24718e9,  # Msun/h
+
+        # Metallicity calculation parameters
+        'mcold_disc': 'mgas_disk',
+        'mcold_z_disc': 'mgas_metals_disk',
+        'mcold_burst': 'mgas_bulge', 
+        'mcold_z_burst': 'mgas_metals_bulge',
+    }
+    config['snap'] = snap
+    
+    # File selection criteria
+    config['selection'] = {
+        'galaxies.hdf5': {
+            'group': 'galaxies',
+            'datasets': [
+                'mvir_hosthalo', # mhhalo
+                ],
+            'units': ['Msun/h'],
+            'low_limits': [20 * config['mp']],
+            'high_limits': [None]
+        }
+    }
+     # Define the lines and luminosity names
+    config['lines'] = ['Halpha', 'Hbeta', 'NII6583', 'OII3727', 'OIII5007', 'SII6716']
+    config['line_prefix'] = 'L_tot_'
+    config['line_suffix_ext'] = '_ext'
+
+    # File redshift property
+    config['file_redshift'] = {
+        "file": "galaxies.hdf5",
+        "group": "run_info",
+        "dataset": "redshift",
+        "unit": "redshift"
+    }
+
+    # File properties to extract
+    config['file_props'] = {
+        'galaxies.hdf5': {
+            'group': 'galaxies',
+            'datasets': [
+                         'id_halo', # index
+                         'type',  # type
+                         'position_x', #xgal
+                         'position_y', #ygal
+                         'position_z', #zgal
+                         'velocity_x', #vxgal
+                         'velocity_y', #vygal
+                         'velocity_z', #vzgal
+                         'rgas_bulge', #rbulge
+                         'rgas_disk', #rdisk
+                         'mhot', #mhot
+                         'mgas_disk', #'mcold'
+                         'mgas_bulge', # 'mcold_burst'
+                         'mgas_metals_disk', # 'cold_metal'
+                         'mgas_metals_bulge', # 'metals_burst',
+                         'mstars_bulge',  # mstars_bulge
+                         'mstars_disk',  # mstars_disk
+                         'sfr_disk', # mstardot
+                         'sfr_burst', # mstardot_burst
+                         'm_bh', # 'M_SMBH'
+                         'bh_accretion_rate_hh', # 'SMBH_Mdot_hh'
+                         'bh_accretion_rate_sb', # 'SMBH_Mdot_stb'
+                         'bh_spin', # 'SMBH_Spin'
+                         'bolometric_luminosity_agn', # 'L_bol_agn'
+                         'mstars_burst_diskinstabilities',
+                         'mstars_burst_mergers'
+                         ],
+            'units': [
+                'Host halo index', 
+                'Gal. type (central=0)',
+                'Mpc/h', 'Mpc/h', 'Mpc/h',
+                'km/s','km/s','km/s',
+                'Mpc/h', 
+                'Mpc/h', 'Msun/h', 
+                'Msun/h', 'Msun/h', 'Msun/h', 'Msun/h', 'Msun/h', 
+                'Msun/h', 'Msun/h/Gyr', 
+                'Msun/h/Gyr', 
+                'Msun/h', 'Msun/h/Gyr', 'Msun/h/Gyr', 'Spin', '1e40 erg/s', 'Msun/h', 'Msun/h']
+        }
+    } 
+    return config

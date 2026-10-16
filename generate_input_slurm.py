@@ -4,9 +4,23 @@ import src.slurm_utils as u
 verbose = True
 nvol = 64
 
+SIM = "GP20"
+
 submit_jobs = True  # False for only generating the scripts
 check_all_jobs = True
 clean = False
+
+taurus_sims_Shark = [
+    ('SharkSU_1', [128, 109, 104, 98, 96, 90, 87, 78], list(range(nvol))),
+    ('SharkSU_2', [128, 109, 104, 98, 96, 90, 87, 78], list(range(nvol))),
+    ('SharkUNIT1Gpc_fnl0', [109, 104, 98, 90, 87], list(range(nvol))),
+    ('SharkUNIT1Gpc_fnl0', [128], list(range(5))),
+    ('SharkUNIT1Gpc_fnl0', [81], [0, 1, 2, 5] + list(range(10, 27)) + [28, 34, 35] + list(range(39, nvol))),
+    ('SharkUNIT1Gpc_fnl0', [78], list(range(6))),
+    ('SharkUNIT1Gpc_fnl100', [108, 103, 97, 89, 86], list(range(nvol))),
+    ('SharkUNIT1Gpc_fnl100', [127, 95, 77], [0]),
+]
+
 
 # Galform in taurus
 taurus_sims_GP20 = [
@@ -25,12 +39,23 @@ cosma_sims_GP20 = [
 ]
 
 # Select which simulations to process
-simulations = taurus_sims_GP20
 hpc = 'taurus'
+
+simtypes = {
+    "Shark": taurus_sims_Shark,
+    "GP20": taurus_sims_GP20,
+    "cosma": cosma_sims_GP20
+}
+
+# Loop over the relevant simulations
+try:
+    simulations = simtypes[SIM]
+except KeyError:
+    raise ValueError(f"Simulation type '{SIM}' not supported. Available types: {simtypes.keys()}")
 
 # Submit, check or clean
 if clean:
-    u.clean_all_jobs(test_taurus_sims_GP20, only_show=True)
+    u.clean_all_jobs(simulations, only_show=True)
 elif check_all_jobs:
     results = u.check_all_jobs(simulations,verbose=True)
 else:            
